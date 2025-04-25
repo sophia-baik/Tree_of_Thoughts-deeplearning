@@ -17,11 +17,12 @@ MODEL = "gpt-4o-mini"
 
 def import_data():
     """
-
+    reads all permutations of 1-13 where arithmetic operations on four numbers can equal 24
+    returns list of lists where each list is a quad
     """
     df = pd.read_csv("gameof24/24game_problems.csv")
     df['numbers'] = df['numbers'].apply(literal_eval)
-    numbers = df['numbers'].tolist()  # list of lists where each list is a quad
+    numbers = df['numbers'].tolist()
     return numbers
 
 
@@ -53,6 +54,7 @@ def get_file_date_time():
 
 
 def update_percentage(percent: float, datetime: str, filepath: str):
+    """adds percent correct for unique datetime at filepath"""
     df = pd.read_csv(filepath)
     new_df = pd.DataFrame({"idx": [datetime], "percent": [percent]})
     df = pd.concat([df, new_df], ignore_index=True)

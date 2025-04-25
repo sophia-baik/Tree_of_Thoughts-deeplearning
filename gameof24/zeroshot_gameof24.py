@@ -38,9 +38,7 @@ def get_responses(amount):
 
 
 def eval_correctness(entry_number: str):
-    """
-    returns what percent of responses equal 24
-    """
+    """returns what percent of responses equal 24"""
     correct = 0
     total = 0
     df = pd.read_csv(f"gameof24/data_zeroshot/results_{entry_number}.csv")
