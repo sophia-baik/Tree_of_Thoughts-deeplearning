@@ -4,7 +4,7 @@ import util_gameof24
 
 
 ## instructions ##
-INSTRUCT = "You are a game of 24 grandmaster. In the game of 24, you are provided 4 numbers, and you must use the basic arithmetic operations: (+ - * /) to obtain 24. Each number must be used exactly once. Put your final equation at the very end on a new line. Don't put any of the math in latex or markdown formats."
+INSTRUCT = "You are a game of 24 grandmaster. Put your final equation at the very end on a new line. Don't put any of the math in latex or markdown formats."
 
 numbers = util_gameof24.import_data()  # load game24 data
 
