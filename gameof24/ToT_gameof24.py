@@ -41,7 +41,7 @@ def complete_one_problem(quad, b):
         last_line = response.split('\n')[-1]
         before_equals = last_line[0]
         after_equals = last_line[1]
-        if is_valid_response(before_equals, after_equals):
+        if is_valid_equation(before_equals, after_equals):
             correct += 1
         # Sophia has already implemented this in her mind and only needs to write the code down thank you very much sir:)
         # at each step, verify chat's answer is valid
