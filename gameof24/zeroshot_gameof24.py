@@ -72,8 +72,18 @@ def did_he_follow_instructions_and_is_correct(input: list, s: str):
     returns True or False
     """
     input = json.loads(input)
-    s_lis = s.replace('+', ',').replace('-', ',').replace('*',
-                                                          ',').replace('/', ',').replace('(', '').replace(')', '').replace(' ', '').split(',')
+    for c in s:
+        if c.isdigit():
+            empty_s += c
+        elif c == '+':
+            empty_s += ','
+        elif c == '-':
+            empty_s += ','
+        elif c == '*':
+            empty_s += ','
+        elif c == '/':
+            empty_s += ','
+    s_lis = empty_s.split(',')
     if len(s_lis) != 4:  # did not use 4 numbers
         return False
     for num in input:
