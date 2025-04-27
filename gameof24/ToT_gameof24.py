@@ -11,49 +11,44 @@ PROMPT_3 = "Remaining numbers: <INSERT NUMBERS>. If you  If you cannot obtain 24
 numbers = util_gameof24.import_data()  # load game24 data
 
 
-def is_valid_equation(given_numbers, before_equals, after_equals):
-     if eval(before_equals) != eval(after_equals):
+def is_valid_equation(given_numbers: list[int], before_equals: str, after_equals: str) -> bool:
+    if eval(before_equals) != eval(after_equals):
+        # bad thought
+        print("bad thought")
+        return False
+
+    # Parse the numbers used in the expression
+    number_string = ""
+    for c in before_equals:
+        if c.isdigit():
+            number_string += c
+        elif c in ['+', '-', '*', '/']:
+            number_string += ','
+
+    used_numbers = number_string.split(',')
+    used_numbers = [num for num in used_numbers if num != '']
+
+    # check if used only 2 numbers are used
+    if len(used_numbers) != 2:
+        print("not 2")
+        return False
+
+    # Check if all provided numbers are used exactly once
+    temp_input = [str(num) for num in given_numbers]
+    for num in used_numbers:
+        if num not in temp_input:
+            print("check use")
             return False
+        temp_input.remove(num)
 
-        # Parse the numbers used in the expression
-     number_string = ""
-     for c in before_equals:
-            if c.isdigit():
-                number_string += c
-            elif c in ['+', '-', '*', '/']:
-                number_string += ','
-
-     used_numbers = number_string.split(',')
-     used_numbers = [num for num in used_numbers if num != '']
-
-        # Check if exactly 4 numbers are used
-     if len(used_numbers) != 4:
-            return False
-
-        # Check if all provided numbers are used exactly once
-     temp_input = [str(num) for num in given_numbers]
-     for num in used_numbers:
-            if num not in temp_input:
-                return False
-            temp_input.remove(num)
-
-     if temp_input != []:  # Some input numbers weren't used
-            return False
-
-        # Check if the result equals 24
-     if eval(before_equals) != 24:
-            return False
-
-     return True
-
-      # 5 3 2 4
-      # 8 2 4
+    return True
 
 
-def complete_one_problem(quad, b):
+def complete_one_problem(quad: list[int], b: int):
     """
     uses ToT to solve problem with [quad] numbers
      - b is the max breadth
+     - quad is a list of 4 numbers
     ---
     this function doesn't chain the previous answers to chat
     """
@@ -65,9 +60,11 @@ def complete_one_problem(quad, b):
 
     entry_number = util_gameof24.get_file_date_time()
 
+    str_quad = str(quad)
+
     for i in range(b):
         response = (util_gameof24.ask_chat(
-            PROMPT_1 + quad, util_gameof24.MODEL, INSTRUCT))
+            PROMPT_1 + str_quad, util_gameof24.MODEL, INSTRUCT))
         step_one_responses.append(response)
 
         # This is quite hard coded; we'll be in trouble if Chat deviates from instructions
@@ -75,16 +72,15 @@ def complete_one_problem(quad, b):
         before_equals = last_line[0]
         after_equals = last_line[1]
 
-        if is_valid_equation(quad, before_equals, after_equals):
+        if is_valid_equation(str_quad, before_equals, after_equals):
             correct += 1
             valid_responses.append(response)
-                 
+
     ### step 2 ###
 
     # for each b responses, ask chat using that response with 3*b responses and rank them. choose the best b
     # for each answer chat gave from step 1, sample 3 times
 
-    
     # prompt 2
 
     expanded_child_responses = []
@@ -94,18 +90,19 @@ def complete_one_problem(quad, b):
         after_equals = last_line[1]
 
         for _ in range(3):  # 3 child thoughts per valid parent
-            child_response = util_gameof24.ask_chat(PROMPT_2 + response, util_gameof24.MODEL, INSTRUCT)
-            
+            child_response = util_gameof24.ask_chat(
+                PROMPT_2 + response, util_gameof24.MODEL, INSTRUCT)
+
             last_line = child_response.strip().split('\n')[-1]
             child_before = last_line[0]
             child_after = last_line[1]
 
-            if is_valid_equation(quad, child_before, child_after):
+            if is_valid_equation(str_quad, child_before, child_after):
                 expanded_child_responses.append(child_response)
     # for each new answer, verify chat's answer is valid; if not, prune
 
     # run evaluator on b*3 (possibly less) expressions and pick top b
-     
+
     ### step 3 ###
 
     # prompt 3 - give chat 2 numbers and see if it can make 24
