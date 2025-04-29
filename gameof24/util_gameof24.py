@@ -86,3 +86,23 @@ def parse_math_expression(response: str):
         before_equals = math_line.strip()
         after_equals = str(eval(before_equals))
     return before_equals, after_equals
+
+
+def extract_numbers(expression: str):
+    """
+    Extracts numbers from a math expression
+    Example: 12 + 6 returns [12,6] (int list)
+    """
+    numbers = []
+    number = ''
+    for c in expression:
+        # accumulate digits and then add them once we run into an operation
+        if c.isdigit():
+            number += c
+        else:
+            if number:
+                numbers.append(int(number))
+                number = ''
+    if number:
+        numbers.append(int(number))
+    return numbers
