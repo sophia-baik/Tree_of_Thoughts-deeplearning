@@ -1,5 +1,6 @@
 import util_gameof24
 import random
+import tiktoken
 
 
 # instructions and prompts
@@ -16,6 +17,26 @@ value_prompt = '''Evaluate if given numbers can reach 24 (sure/likely/impossible
 
 
 numbers = util_gameof24.import_data()  # load game24 data
+
+
+def num_tokens(string: str, encoding_name="cl100k_base") -> int:
+    """
+    Returns the number of tokens in a text string.
+    - from OpenAI
+    """
+    encoding = tiktoken.get_encoding(encoding_name)
+    tokens = len(encoding.encode(string))
+    return tokens
+
+
+def total_cost(input_tokens: int, output_tokens: int) -> float:
+    """
+    returns total cost using o4-mini
+    """
+    input_rate = 1.1/1000000  # dollars per one token
+    output_rate = 4.4/1000000  # dollars per one token
+
+    return input_rate*input_tokens + output_rate*output_tokens
 
 
 def before_equals_to_list(before_equals: str, out_type: str) -> list:
@@ -103,6 +124,9 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
     """
     ### step 1 ###
 
+    input_tokens = 0
+    output_tokens = 0
+
     # ask chat prompt 1 b times
     step_one_responses = []
     valid_responses = []
@@ -115,6 +139,10 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
         response = (util_gameof24.ask_chat(
             PROMPT_1 + str_quad, util_gameof24.MODEL, INSTRUCT))
         step_one_responses.append(response)
+
+        # count tokens
+        input_tokens += num_tokens(PROMPT_1 + str_quad) + num_tokens(INSTRUCT)
+        output_tokens += num_tokens(response)
 
         # This is quite hard coded; we'll be in trouble if Chat deviates from instructions
         lines = response.split('\n')
@@ -157,6 +185,12 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
         # ask chat to evaluate
         response = util_gameof24.ask_chat(value_prompt.replace(
             "{input}", str(rem_nums)), util_gameof24.MODEL, short_instruct)
+
+        # count tokens
+        input_tokens += num_tokens(value_prompt.replace(
+            "{input}", str(rem_nums))) + num_tokens(short_instruct)
+        output_tokens += num_tokens(response)
+
         response = parse_chats_eval_answer(response)
         if response == "sure":
             sure_nums.append(rem_nums)
@@ -202,6 +236,11 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
             child_response = util_gameof24.ask_chat(
                 PROMPT_2+str(nums), util_gameof24.MODEL, INSTRUCT)
             step_two_responses.append(child_response)
+
+            # count tokens
+            input_tokens += num_tokens(PROMPT_2 +
+                                       str(nums)) + num_tokens(INSTRUCT)
+            output_tokens += num_tokens(child_response)
 
             # This is quite hard coded; we'll be in trouble if Chat deviates from instructions
             lines = child_response.split('\n')
@@ -275,6 +314,11 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
             "<INSERT NUMBERS>", str(last_nums)), util_gameof24.MODEL, INSTRUCT)
         last_responses.append(last_response)
 
+        # count tokens
+        input_tokens += num_tokens(PROMPT_3.replace(
+            "<INSERT NUMBERS>", str(last_nums))) + num_tokens(INSTRUCT)
+        output_tokens += num_tokens(last_response)
+
         if "no" in last_response.lower():
             continue
 
@@ -315,7 +359,7 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
 
     print("\n\ndone one problem\n\n")
 
-    return got24
+    return got24, input_tokens, output_tokens
 
 
 def run_experiment(amount, b):
@@ -326,18 +370,25 @@ def run_experiment(amount, b):
     for i in range(362, 462):
         # for i in range(len(numbers)-1, len(numbers)-1-amount, -1):
         quad = numbers[i]
-        solved = complete_one_problem(quad, b)
+        solved, _, _ = complete_one_problem(quad, b)
         total += 1
         if solved:
             correct += 1
     return correct/total
 
 
+def cost_of_one_problem(index):
+    quad = numbers[index]
+    solved, input_tokens, output_tokens = complete_one_problem(quad, 5)
+    return total_cost(input_tokens, output_tokens)
+
+
 if __name__ == '__main__':
+    print(cost_of_one_problem(362))
     # outputs = []
-    x = run_experiment(1, 5)
+    # x = run_experiment(1, 5)
     # outputs.append(x)
-    print(x)  # returns 0.68 on first run
+    # print(x)  # returns 0.68 on first run
     # print("\nfinal outputs\n")
     # print(outputs)
     # complete_one_problem([4, 6, 12, 13], 5)
