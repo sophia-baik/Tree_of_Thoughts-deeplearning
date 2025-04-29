@@ -11,43 +11,6 @@ PROMPT_3 = "Remaining numbers: <INSERT NUMBERS>. This is the last step. If you c
 short_instruct = "You are a game of 24 evaluator."
 
 value_prompt = '''Evaluate if given numbers can reach 24 (sure/likely/impossible)
-10 14
-10 + 14 = 24
-sure
-11 12
-11 + 12 = 23
-12 - 11 = 1
-11 * 12 = 132
-11 / 12 = 0.91
-impossible
-4 4 10
-4 + 4 + 10 = 8 + 10 = 18
-4 * 10 - 4 = 40 - 4 = 36
-(10 - 4) * 4 = 6 * 4 = 24
-sure
-4 9 11
-9 + 11 + 4 = 20 + 4 = 24
-sure
-5 7 8
-5 + 7 + 8 = 12 + 8 = 20
-(8 - 5) * 7 = 3 * 7 = 21
-I cannot obtain 24 now, but numbers are within a reasonable range
-likely
-5 6 6
-5 + 6 + 6 = 17
-(6 - 5) * 6 = 1 * 6 = 6
-I cannot obtain 24 now, but numbers are within a reasonable range
-likely
-10 10 11
-10 + 10 + 11 = 31
-(11 - 10) * 10 = 10
-10 10 10 are all too big
-impossible
-1 3 3
-1 * 3 * 3 = 9
-(1 + 3) * 3 = 12
-1 3 3 are all too small
-impossible
 {input}
 '''
 
@@ -118,14 +81,14 @@ def find_remaining_nums(original: list, before: str, after: str) -> str:
 
 
 def parse_chats_eval_answer(response: str) -> str:
-    """takes long response and returns sure/maybe/impossible"""
+    """takes long response and returns sure/likely/impossible"""
     lines = response.split('\n')
     for i in range(len(lines)-1, -1, -1):
         line = lines[i].lower()
         if "sure" in line:
             return "sure"
-        elif "maybe" in line:
-            return "maybe"
+        elif "likely" in line:
+            return "likely"
         elif "impossible" in line:
             return "impossible"
 
@@ -186,7 +149,7 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
     # before step 2, we need to find the 3 numbers we are going to give chat next
     remaining_numbers = []  # is going to contain lists of remaining 3 numbers
     sure_nums = []
-    maybe_nums = []
+    likely_nums = []
     for before, after in valid_responses:
         # get remanining numbers
         rem_nums = find_remaining_nums(quad, before, after)
@@ -197,24 +160,24 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
         response = parse_chats_eval_answer(response)
         if response == "sure":
             sure_nums.append(rem_nums)
-        elif response == "maybe":
-            maybe_nums.append(rem_nums)
+        elif response == "likely":
+            likely_nums.append(rem_nums)
 
     # select b
     if len(sure_nums) >= b:
         remaining_numbers = random.sample(sure_nums, b)
-    elif len(sure_nums) + len(maybe_nums) >= b:
+    elif len(sure_nums) + len(likely_nums) >= b:
         left = b - len(sure_nums)
-        remaining_numbers = sure_nums + random.sample(maybe_nums, left)
+        remaining_numbers = sure_nums + random.sample(likely_nums, left)
     else:
-        remaining_numbers = sure_nums + maybe_nums
+        remaining_numbers = sure_nums + likely_nums
 
     # print(remaining_numbers)
 
     # assert len(remaining_numbers) == len(
     #     valid_responses), "length of remaining numbers doesn't match length of valid responses"
 
-    print("\n\ndone step 1\n\n")
+    # print("\n\ndone step 1\n\n")
 
     ### step 2 ###
 
@@ -226,7 +189,7 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
     step_two_responses = []
     valid_child_responses = []
     sure_nums = []
-    maybe_nums = []
+    likely_nums = []
 
     # before step 3, we need to find the 2 numbers we are going to give chat next
     remaining_child_numbers = []  # is going to contain lists of remaining 2 numbers
@@ -268,36 +231,36 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
         for i in range(val_counter, val_length):
             before, after = valid_child_responses[i]
             # get remanining numbers
-            rem_nums = find_remaining_nums(nums, before, after)
+            # rem_nums = find_remaining_nums(nums, before, after)
 
-            # ask chat to evaluate
-            response = util_gameof24.ask_chat(value_prompt.replace(
-                "{input}", str(rem_nums)), util_gameof24.MODEL, short_instruct)
-            response = parse_chats_eval_answer(response)
-            if response == "sure":
-                sure_nums.append(rem_nums)
-            elif response == "maybe":
-                maybe_nums.append(rem_nums)
+            # # ask chat to evaluate
+            # response = util_gameof24.ask_chat(value_prompt.replace(
+            #     "{input}", str(rem_nums)), util_gameof24.MODEL, short_instruct)
+            # response = parse_chats_eval_answer(response)
+            # if response == "sure":
+            #     sure_nums.append(rem_nums)
+            # elif response == "maybe":
+            #     maybe_nums.append(rem_nums)
 
-            # remaining_child_numbers.append(
-            #     find_remaining_nums(nums, before, after))
+            remaining_child_numbers.append(
+                find_remaining_nums(nums, before, after))
             val_counter += 1
 
-    # select b
-    if len(sure_nums) >= b:
-        remaining_child_numbers = random.sample(sure_nums, b)
-    elif len(sure_nums) + len(maybe_nums) >= b:
-        left = b - len(sure_nums)
-        remaining_child_numbers = sure_nums + random.sample(maybe_nums, left)
-    else:
-        remaining_child_numbers = sure_nums + maybe_nums
+    # # select b
+    # if len(sure_nums) >= b:
+    #     remaining_child_numbers = random.sample(sure_nums, b)
+    # elif len(sure_nums) + len(maybe_nums) >= b:
+    #     left = b - len(sure_nums)
+    #     remaining_child_numbers = sure_nums + random.sample(maybe_nums, left)
+    # else:
+    #     remaining_child_numbers = sure_nums + maybe_nums
 
     # print(remaining_child_numbers)
 
     # assert len(valid_child_responses) == len(
     #     remaining_child_numbers), "length of valid child responses doesn't match length of remaining child numbers"
 
-    print("\n\ndone step 2\n\n")
+    # print("\n\ndone step 2\n\n")
 
     # run evaluator on b*3 (possibly less) expressions and pick top b  # not sure how to do this
 
@@ -340,15 +303,15 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
             if eval(last_before) == 24:
                 got24 = True
         if got24:
-            print("Chat got 24!")
+            # print("Chat got 24!")
             break
 
-    if not got24:
-        print("chat failed")
+    # if not got24:
+    #     print("chat failed")
 
     # print(remaining_child_numbers)
     # print(last_responses)
-    print(valid_last_responses)
+    # print(valid_last_responses)
 
     print("\n\ndone one problem\n\n")
 
@@ -360,7 +323,8 @@ def run_experiment(amount, b):
     correct = 0
     if amount == "all":
         amount = len(numbers)
-    for i in range(len(numbers)-1, len(numbers)-1-amount, -1):
+    for i in range(362, 462):
+        # for i in range(len(numbers)-1, len(numbers)-1-amount, -1):
         quad = numbers[i]
         solved = complete_one_problem(quad, b)
         total += 1
@@ -370,6 +334,11 @@ def run_experiment(amount, b):
 
 
 if __name__ == '__main__':
-    print(run_experiment(10, 5))  # returns 0.68 on first run
+    # outputs = []
+    x = run_experiment(1, 5)
+    # outputs.append(x)
+    print(x)  # returns 0.68 on first run
+    # print("\nfinal outputs\n")
+    # print(outputs)
     # complete_one_problem([4, 6, 12, 13], 5)
     # print(is_valid_equation([2, 3, 5, 12], "12 + 5", "17"))
