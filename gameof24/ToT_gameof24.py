@@ -1,4 +1,6 @@
 import util_gameof24
+from typing import List
+
 
 
 # instructions and prompts
@@ -34,7 +36,7 @@ def before_equals_to_list(before_equals: str, out_type: str) -> list:
     return used_numbers
 
 
-def is_valid_equation(given_numbers: list[int], before_equals: str, after_equals: str) -> bool:
+def is_valid_equation(given_numbers: List[int], before_equals: str, after_equals: str) -> bool:
     if eval(before_equals) != eval(after_equals):
         # bad thought
         print("bad thought")
@@ -72,8 +74,21 @@ def find_remaining_nums(original: list, before: str, after: str) -> str:
     output.append(eval(after))
     return output
 
-
-def complete_one_problem(quad: list[int], b: int):
+def evaluate_remaining_numbers(remaining_numbers: List[int]) -> str:
+    evaluation_prompt = (
+        f"Given the numbers {remaining_numbers}, "
+        "how likely is it to reach 24 using +, -, *, / only?\n"
+        "Answer with one word: Sure, Maybe, or Impossible."
+    )
+    response = util_gameof24.ask_chat(evaluation_prompt, util_gameof24.MODEL, INSTRUCT)
+    if "sure" in response.lower():
+        return "Sure"
+    elif "maybe" in response.lower():
+        return "Maybe"
+    else:
+        return "Impossible"
+    
+def complete_one_problem(quad: List[int], b: int):
     """
     uses ToT to solve problem with [quad] numbers
      - b is the max breadth
@@ -106,6 +121,17 @@ def complete_one_problem(quad: list[int], b: int):
             try:
                 before_equals = last_line.split("=")[0].strip()
                 after_equals = last_line.split("=")[1].strip()
+                if is_valid_equation(quad, before_equals, after_equals):
+                    # correct += 1
+                    # valid responses contains tuples
+                    # each tuple has [0] the 2 numbers chat combined, and [1] the result
+                    remaining = find_remaining_nums(quad, before_equals, after_equals)
+
+                    evaluation = evaluate_remaining_numbers(remaining)
+                    if evaluation == "Impossible":
+                        print("Pruned a Thought")
+                        continue 
+                    valid_responses.append((before_equals, after_equals))
             except:
                 print("step 1: i think format was off: yes equals\n")
                 print(last_line)
@@ -113,6 +139,17 @@ def complete_one_problem(quad: list[int], b: int):
             try:
                 before_equals = last_line.strip()
                 after_equals = str(eval(before_equals))
+                if is_valid_equation(quad, before_equals, after_equals):
+                    # correct += 1
+                    # valid responses contains tuples
+                    # each tuple has [0] the 2 numbers chat combined, and [1] the result
+                    remaining = find_remaining_nums(quad, before_equals, after_equals)
+
+                    evaluation = evaluate_remaining_numbers(remaining)
+                    if evaluation == "Impossible":
+                        print("Pruned a Thought")
+                        continue 
+                    valid_responses.append((before_equals, after_equals))
             except:
                 print("step 1: i think format was off: no equals\n")
                 print(last_line)
@@ -120,23 +157,41 @@ def complete_one_problem(quad: list[int], b: int):
             # before_equals = last_line.strip()
             # after_equals = eval(before_equals)
 
-        if is_valid_equation(quad, before_equals, after_equals):
-            # correct += 1
-            # valid responses contains tuples
-            # each tuple has [0] the 2 numbers chat combined, and [1] the result
-            valid_responses.append((before_equals, after_equals))
+        # if is_valid_equation(quad, before_equals, after_equals):
+        #     # correct += 1
+        #     # valid responses contains tuples
+        #     # each tuple has [0] the 2 numbers chat combined, and [1] the result
+        #     remaining = find_remaining_nums(quad, before_equals, after_equals)
 
+        #     evaluation = evaluate_remaining_numbers(remaining)
+        #     if evaluation == "Impossible":
+        #        print("Pruned a Thought")
+        #        continue 
+        #     valid_responses.append((before_equals, after_equals))
+
+    remaining_numbers_with_eval = [(find_remaining_nums(quad, before, after), evaluate_remaining_numbers(find_remaining_nums(quad, before, after)))
+                                    for before, after in valid_responses]
+
+    # Sort by evaluation: Sure = 0, Maybe = 1
+    remaining_numbers_with_eval.sort(key=lambda x: 0 if x[1] == "Sure" else 1)
+
+    # Keep only top b
+    remaining_numbers_with_eval = remaining_numbers_with_eval[:b]
+
+    # Extract remaining numbers
+    remaining_numbers = [x[0] for x in remaining_numbers_with_eval]
     # before step 2, we need to find the 3 numbers we are going to give chat next
-    remaining_numbers = []  # is going to contain lists of remaining 3 numbers
-    for before, after in valid_responses:
-        remaining_numbers.append(find_remaining_nums(quad, before, after))
+    # remaining_numbers = []  # is going to contain lists of remaining 3 numbers
+    # for before, after in valid_responses:
+    #     remaining_numbers.append(find_remaining_nums(quad, before, after))
 
     assert len(remaining_numbers) == len(
         valid_responses), "length of remaining numbers doesn't match length of valid responses"
 
     print("\n\ndone step 1\n\n")
 
-    ### step 2 ###
+    # step 2 
+
 
     # for each b responses, ask chat using that response with 3*b responses and rank them. choose the best b
     # for each answer chat gave from step 1, sample 3 times
@@ -265,6 +320,6 @@ def run_experiment(amount, b):
 
 
 if __name__ == '__main__':
-    print(run_experiment(50, 5))  # returns 0.68 on first run
+    print(run_experiment(25, 5))  # returns 0.68 on first run
     # complete_one_problem([4, 6, 12, 13], 5)
     # print(is_valid_equation([2, 3, 5, 12], "12 + 5", "17"))
