@@ -87,6 +87,17 @@ def parse_math_expression(response: str):
         after_equals = str(eval(before_equals))
     return before_equals, after_equals
 
+def ask_and_parse(prompt: str, INSTRUCT):
+    """
+    Asks Chat using prompt. Parses resultant expression.
+    Returns None, None for malformed inputs.
+    """
+    response = ask_chat(prompt, MODEL, INSTRUCT)
+    try:
+        return parse_math_expression(response)
+    except ValueError:
+        return None, None
+
 
 def extract_numbers(expression: str):
     """

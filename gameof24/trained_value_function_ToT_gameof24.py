@@ -18,7 +18,7 @@ df = util_gameof24.import_data()
 
 # Load weights from pretrained network
 value_model = ValueNetwork()
-value_model.load_state_dict(torch.load('gameof24/value_network.pth', weights_only = True))
+value_model.load_state_dict(torch.load('gameof24/weighted_loss_value_network.pth', weights_only = True))
 value_model.eval()
 
 def evaluate_states(states):
@@ -72,18 +72,6 @@ def find_remaining_nums(original: list, before: str, after: str) -> str:
     output.append(eval(after))
     return output
 
-def ask_and_parse(prompt: str):
-    """
-    Asks Chat using prompt. Parses resultant expression.
-    Returns None, None for malformed inputs.
-    """
-    response = util_gameof24.ask_chat(prompt, util_gameof24.MODEL, INSTRUCT)
-    try:
-        return util_gameof24.parse_math_expression(response)
-    except ValueError:
-        return None, None
-
-
 def complete_one_problem(quad: list[int], b: int, k: int = 3):
     """
     Input:
@@ -109,7 +97,7 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
 
     # Step 1: Query Chat to combine two of the four initial numbers b * k times
     for i in range(b * k):
-        before, after = ask_and_parse(PROMPTS["step1"] + str(quad))
+        before, after = util_gameof24.ask_and_parse(PROMPTS["step1"] + str(quad), INSTRUCT)
         if before and after and is_valid_equation(quad, before, after):
             new_nums = find_remaining_nums(quad, before, after)
             new_trace = [f"{before} = {after}"]
@@ -131,7 +119,7 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
     # Step 2: Query Chat to combine two of the four initial numbers b * k times
     for score, state, trace in top_states:
         for i in range(k):
-            before, after = ask_and_parse(PROMPTS["step2"] + str(state))
+            before, after = util_gameof24.ask_and_parse(PROMPTS["step2"] + str(state), INSTRUCT)
             if before and after and is_valid_equation(state, before, after):
                 new_nums = find_remaining_nums(state, before, after)
                 new_trace = trace + [f"{before} = {after}"]
@@ -154,7 +142,7 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
     # Step 3: Query Chat to combine the remaining two numbers min(k, 4) times.
     for score, state, trace in top_states:
         prompt = PROMPTS["step3"].replace("<INSERT NUMBERS>", str(state))
-        before, after = ask_and_parse(prompt)
+        before, after = util_gameof24.ask_and_parse(prompt, INSTRUCT)
         if before and after and is_valid_equation(state, before, after):
             new_trace = trace + [f"{before} = {after}"]
             if abs(eval(before) - 24) < 1e-6:
@@ -174,7 +162,7 @@ def run_experiment(amount, b):
     correct = 0
     if amount == "all":
         amount = len(df)
-    for i in range(len(df)-1, len(df)-1-amount, -1):
+    for i in range(361,371):
         quad = df[i]
         solved = complete_one_problem(quad, b)
         total += 1
