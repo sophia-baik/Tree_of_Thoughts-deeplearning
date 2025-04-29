@@ -4,7 +4,19 @@ import util_gameof24
 
 
 ## instructions ##
-INSTRUCT = "You are a game of 24 grandmaster. Put your final equation at the very end on a new line. Don't put any of the math in latex or markdown formats."
+INSTRUCT = '''Use numbers and basic arithmetic operations (+ - * /) to obtain 24.
+Input: 4 4 6 8
+Answer: (4 + 8) * (6 - 4) = 24
+Input: 2 9 10 12
+Answer: 2 * 12 * (10 - 9) = 24
+Input: 4 9 10 13
+Answer: (13 - 9) * (10 - 4) = 24
+Input: 1 4 8 8
+Answer: (8 / 4 + 1) * 8 = 24
+Input: 5 5 5 9
+Answer: 5 + 5 + 5 + 9 = 24
+Input: {input}
+'''
 
 numbers = util_gameof24.import_data()  # load game24 data
 
@@ -24,7 +36,7 @@ def get_responses(amount):
             responses[query] = util_gameof24.ask_chat(
                 query, util_gameof24.MODEL, INSTRUCT)
     else:
-        for i in range(len(numbers)-1, len(numbers)-1-amount, -1):
+        for i in range(362, 462):
             query = str(numbers[i])
             responses[query] = util_gameof24.ask_chat(
                 query, util_gameof24.MODEL, INSTRUCT)
@@ -61,6 +73,8 @@ def eval_correctness(entry_number: str):
 
     percentage = round((correct/total), 4)*100
     print(f"percent correct {percentage}%")
+    if len(not_correct_format) != 0:
+        print(f'num responses w/ incorrect format: {len(not_correct_format)}')
     print(not_correct_format if len(not_correct_format)
           != 0 else print("all correct format!"))
     return percentage
@@ -72,6 +86,7 @@ def did_he_follow_instructions_and_is_correct(input: list, s: str):
     returns True or False
     """
     input = json.loads(input)
+    empty_s = ''
     for c in s:
         if c.isdigit():
             empty_s += c
@@ -93,6 +108,13 @@ def did_he_follow_instructions_and_is_correct(input: list, s: str):
             s_lis.remove(str(num))
     if s_lis != []:  # did not use only the provided 4 numbers
         return False
+    # get rid of any words before the eqn (they'll typically be precede a :)
+    if ':' in s:
+        s = s[s.index(':')+1:]
+    if 'is' in s:
+        s = s[s.index('is')+2:]
+    if ',' in s:
+        s = s[s.index(',')+1:]
     if eval(s) != 24:  # does not == 24
         return False
     return True
@@ -102,7 +124,7 @@ if __name__ == "__main__":
     ### CAREFUL WHEN RUNNING GET_RESPONSES ###
     ### WE MIGHT NOT HAVE TO RUN IT EVERY TIME ###
 
-    datetime = get_responses("all")
+    datetime = get_responses(10)
     percentage = eval_correctness(datetime)
     util_gameof24.update_percentage(
         percentage, datetime, "gameof24/data_zeroshot/percent_correct.csv")
