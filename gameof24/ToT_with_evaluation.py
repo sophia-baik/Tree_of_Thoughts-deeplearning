@@ -1,6 +1,5 @@
 import util_gameof24
 import random
-import tiktoken
 
 
 # instructions and prompts
@@ -17,26 +16,6 @@ value_prompt = '''Evaluate if given numbers can reach 24 (sure/likely/impossible
 
 
 numbers = util_gameof24.import_data()  # load game24 data
-
-
-def num_tokens(string: str, encoding_name="cl100k_base") -> int:
-    """
-    Returns the number of tokens in a text string.
-    - from OpenAI
-    """
-    encoding = tiktoken.get_encoding(encoding_name)
-    tokens = len(encoding.encode(string))
-    return tokens
-
-
-def total_cost(input_tokens: int, output_tokens: int) -> float:
-    """
-    returns total cost using o4-mini
-    """
-    input_rate = 1.1/1000000  # dollars per one token
-    output_rate = 4.4/1000000  # dollars per one token
-
-    return input_rate*input_tokens + output_rate*output_tokens
 
 
 def before_equals_to_list(before_equals: str, out_type: str) -> list:
@@ -114,7 +93,7 @@ def parse_chats_eval_answer(response: str) -> str:
             return "impossible"
 
 
-def complete_one_problem(quad: list[int], b: int, k: int = 3):
+def complete_one_problem(quad: list[int], b: int, k: int = 3, count_tokens: bool = False):
     """
     uses ToT to solve problem with [quad] numbers
      - b is the max breadth
@@ -136,34 +115,40 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
     str_quad = str(quad)
 
     for i in range(b*k):
-        response = (util_gameof24.ask_chat(
-            PROMPT_1 + str_quad, util_gameof24.MODEL, INSTRUCT))
-        step_one_responses.append(response)
+        # response = (util_gameof24.ask_chat(
+        #     PROMPT_1 + str_quad, util_gameof24.MODEL, INSTRUCT))
+
+        (before_equals, after_equals), out_tokens = util_gameof24.ask_and_parse(
+            PROMPT_1 + str_quad, INSTRUCT, out_tokens=True)
+
+        # step_one_responses.append(response)
 
         # count tokens
-        input_tokens += num_tokens(PROMPT_1 + str_quad) + num_tokens(INSTRUCT)
-        output_tokens += num_tokens(response)
+        if count_tokens:
+            input_tokens += util_gameof24.num_tokens(PROMPT_1 +
+                                                     str_quad) + util_gameof24.num_tokens(INSTRUCT)
+            output_tokens += out_tokens
 
         # This is quite hard coded; we'll be in trouble if Chat deviates from instructions
-        lines = response.split('\n')
-        last_line = lines[-1]
-        if len(last_line.strip()) == 0:
-            last_line = lines[-2]
+        # lines = response.split('\n')
+        # last_line = lines[-1]
+        # if len(last_line.strip()) == 0:
+        #     last_line = lines[-2]
 
-        if "=" in last_line:
-            try:
-                before_equals = last_line.split("=")[0].strip()
-                after_equals = last_line.split("=")[1].strip()
-            except:
-                print("step 1: i think format was off: yes equals\n")
-                print(last_line)
-        else:
-            try:
-                before_equals = last_line.strip()
-                after_equals = str(eval(before_equals))
-            except:
-                print("step 1: i think format was off: no equals\n")
-                print(last_line)
+        # if "=" in last_line:
+        #     try:
+        #         before_equals = last_line.split("=")[0].strip()
+        #         after_equals = last_line.split("=")[1].strip()
+        #     except:
+        #         print("step 1: i think format was off: yes equals\n")
+        #         print(last_line)
+        # else:
+        #     try:
+        #         before_equals = last_line.strip()
+        #         after_equals = str(eval(before_equals))
+        #     except:
+        #         print("step 1: i think format was off: no equals\n")
+        #         print(last_line)
 
             # before_equals = last_line.strip()
             # after_equals = eval(before_equals)
@@ -187,9 +172,10 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
             "{input}", str(rem_nums)), util_gameof24.MODEL, short_instruct)
 
         # count tokens
-        input_tokens += num_tokens(value_prompt.replace(
-            "{input}", str(rem_nums))) + num_tokens(short_instruct)
-        output_tokens += num_tokens(response)
+        if count_tokens:
+            input_tokens += util_gameof24.num_tokens(value_prompt.replace(
+                "{input}", str(rem_nums))) + util_gameof24.num_tokens(short_instruct)
+            output_tokens += util_gameof24.num_tokens(response)
 
         response = parse_chats_eval_answer(response)
         if response == "sure":
@@ -233,34 +219,38 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
 
     for nums in remaining_numbers:
         for _ in range(3):
-            child_response = util_gameof24.ask_chat(
-                PROMPT_2+str(nums), util_gameof24.MODEL, INSTRUCT)
-            step_two_responses.append(child_response)
+            # child_response = util_gameof24.ask_chat(
+            #     PROMPT_2+str(nums), util_gameof24.MODEL, INSTRUCT)
+            # step_two_responses.append(child_response)
+
+            (child_before, child_after), out_tokens = util_gameof24.ask_and_parse(
+                PROMPT_2+str(nums), INSTRUCT, out_tokens=True)
 
             # count tokens
-            input_tokens += num_tokens(PROMPT_2 +
-                                       str(nums)) + num_tokens(INSTRUCT)
-            output_tokens += num_tokens(child_response)
+            if count_tokens:
+                input_tokens += util_gameof24.num_tokens(PROMPT_2 +
+                                                         str(nums)) + util_gameof24.num_tokens(INSTRUCT)
+                output_tokens += out_tokens
 
-            # This is quite hard coded; we'll be in trouble if Chat deviates from instructions
-            lines = child_response.split('\n')
-            last_line = lines[-1]
-            if len(last_line.strip()) == 0:
-                last_line = lines[-2]
-            if "=" in last_line:
-                try:
-                    child_before = last_line.split("=")[0].strip()
-                    child_after = last_line.split("=")[1].strip()
-                except:
-                    print("step 2: i think format was off: yes equals\n")
-                    print(last_line)
-            else:
-                try:
-                    child_before = last_line.strip()
-                    child_after = str(eval(child_before))
-                except:
-                    print("step 2: i think format was off: no equals\n")
-                    print(last_line)
+            # # This is quite hard coded; we'll be in trouble if Chat deviates from instructions
+            # lines = child_response.split('\n')
+            # last_line = lines[-1]
+            # if len(last_line.strip()) == 0:
+            #     last_line = lines[-2]
+            # if "=" in last_line:
+            #     try:
+            #         child_before = last_line.split("=")[0].strip()
+            #         child_after = last_line.split("=")[1].strip()
+            #     except:
+            #         print("step 2: i think format was off: yes equals\n")
+            #         print(last_line)
+            # else:
+            #     try:
+            #         child_before = last_line.strip()
+            #         child_after = str(eval(child_before))
+            #     except:
+            #         print("step 2: i think format was off: no equals\n")
+            #         print(last_line)
 
             # for each new answer, verify chat's answer is valid; if not, prune
             if is_valid_equation(nums, child_before, child_after):
@@ -312,12 +302,13 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
     for last_nums in remaining_child_numbers:
         last_response = util_gameof24.ask_chat(PROMPT_3.replace(
             "<INSERT NUMBERS>", str(last_nums)), util_gameof24.MODEL, INSTRUCT)
-        last_responses.append(last_response)
+        # last_responses.append(last_response)
 
         # count tokens
-        input_tokens += num_tokens(PROMPT_3.replace(
-            "<INSERT NUMBERS>", str(last_nums))) + num_tokens(INSTRUCT)
-        output_tokens += num_tokens(last_response)
+        if count_tokens:
+            input_tokens += util_gameof24.num_tokens(PROMPT_3.replace(
+                "<INSERT NUMBERS>", str(last_nums))) + util_gameof24.num_tokens(INSTRUCT)
+            output_tokens += util_gameof24.num_tokens(last_response)
 
         if "no" in last_response.lower():
             continue
@@ -380,15 +371,15 @@ def run_experiment(amount, b):
 def cost_of_one_problem(index):
     quad = numbers[index]
     solved, input_tokens, output_tokens = complete_one_problem(quad, 5)
-    return total_cost(input_tokens, output_tokens)
+    return util_gameof24.total_cost(input_tokens, output_tokens)
 
 
 if __name__ == '__main__':
-    print(cost_of_one_problem(362))
+    # print(cost_of_one_problem(362))
     # outputs = []
-    # x = run_experiment(1, 5)
+    x = run_experiment(1, 5)
     # outputs.append(x)
-    # print(x)  # returns 0.68 on first run
+    print(x)  # returns 0.68 on first run
     # print("\nfinal outputs\n")
     # print(outputs)
     # complete_one_problem([4, 6, 12, 13], 5)
