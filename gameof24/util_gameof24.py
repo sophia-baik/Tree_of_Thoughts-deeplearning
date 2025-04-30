@@ -43,7 +43,7 @@ def papers_data():
     imports dataset paper uses
     """
     df = pd.read_csv("gameof24/24.csv")
-    df["Puzzles"] = df["Puzzles"].apply(string_numbers_to_list)
+    df["Puzzles"] = df["Puzzles"].apply(extract_numbers)
     # for i in range(len(df["puzzles"])):
     #     df["puzzles", i] = string_numbers_to_list(df["puzzles", i])
     puzzles = df["Puzzles"].tolist()
