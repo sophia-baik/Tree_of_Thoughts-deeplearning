@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 import util_gameof24
+import random
 
 
 ## instructions ##
@@ -21,8 +22,9 @@ Input: {input}
 numbers = util_gameof24.import_data()  # load game24 data
 
 
-def get_responses(amount):
+def get_responses(dataset, amount=10):
     """
+    dataset is a list of quad numbers of a specific difficulty
     generates chat's responses
     returns file's unique entry number
     """
@@ -30,14 +32,16 @@ def get_responses(amount):
 
     responses = {}
 
+    sampled = random.sample(dataset, amount)
+
     if amount == "all":
         for i in range(len(numbers)-1, -1, -1):
             query = str(numbers[i])
             responses[query] = util_gameof24.ask_chat(
                 query, util_gameof24.MODEL, INSTRUCT)
     else:
-        for i in range(362, 462):
-            query = str(numbers[i])
+        for quad in sampled:
+            query = str(quad)
             responses[query] = util_gameof24.ask_chat(
                 query, util_gameof24.MODEL, INSTRUCT)
 
@@ -123,8 +127,11 @@ def did_he_follow_instructions_and_is_correct(input: list, s: str):
 if __name__ == "__main__":
     ### CAREFUL WHEN RUNNING GET_RESPONSES ###
     ### WE MIGHT NOT HAVE TO RUN IT EVERY TIME ###
+    one, two, three, four, five = util_gameof24.split_data()
 
-    datetime = get_responses(10)
-    percentage = eval_correctness(datetime)
-    util_gameof24.update_percentage(
-        percentage, datetime, "gameof24/data_zeroshot/percent_correct.csv")
+    for i in range(5):
+        datetime = get_responses(two)
+        percentage = eval_correctness(datetime)
+        print(percentage)
+    # util_gameof24.update_percentage(
+    #     percentage, datetime, "gameof24/data_zeroshot/percent_correct.csv")
