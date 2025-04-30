@@ -27,6 +27,16 @@ def import_data():
     return numbers
 
 
+def papers_data():
+    """
+    imports dataset paper uses
+    """
+    df = pd.read_csv("gameof24/24.csv")
+    df["puzzles"] = df["puzzles"].apply(literal_eval)
+    puzzles = df["puzzles"].tolist()
+    return puzzles
+
+
 def ask_chat(query: str, model: str, instruction: str):
     """sends prompt to chattgpt and returns chat's response"""
     completion = client.chat.completions.create(

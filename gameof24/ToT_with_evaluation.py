@@ -16,6 +16,7 @@ value_prompt = '''Evaluate if given numbers can reach 24 (sure/likely/impossible
 
 
 numbers = util_gameof24.import_data()  # load game24 data
+puzzles = util_gameof24.papers_data()  # load game24 data from paper
 
 
 def before_equals_to_list(before_equals: str, out_type: str) -> list:
@@ -370,16 +371,19 @@ def run_experiment(amount, b):
 
 def cost_of_one_problem(index):
     quad = numbers[index]
-    solved, input_tokens, output_tokens = complete_one_problem(quad, 5)
-    return util_gameof24.total_cost(input_tokens, output_tokens)
+    solved, input_tokens, output_tokens = complete_one_problem(
+        quad, 5, count_tokens=True)
+    return util_gameof24.total_cost(input_tokens, output_tokens), input_tokens, output_tokens
 
 
 if __name__ == '__main__':
-    # print(cost_of_one_problem(362))
+    for i in range(362, 362+5):
+        x = cost_of_one_problem(i)
+        print(x[0], x[1], x[2])
     # outputs = []
-    x = run_experiment(1, 5)
+    # x = run_experiment(1, 5)
     # outputs.append(x)
-    print(x)  # returns 0.68 on first run
+    # print(x)  # returns 0.68 on first run
     # print("\nfinal outputs\n")
     # print(outputs)
     # complete_one_problem([4, 6, 12, 13], 5)
