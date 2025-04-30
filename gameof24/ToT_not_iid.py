@@ -1,5 +1,6 @@
 import util_gameof24
 import random
+import time
 
 
 # instructions and prompts
@@ -317,10 +318,14 @@ def run_difficulties_experiment(dataset, amount=10, b=5):
     """dataset is a list of quad numbers of a specific difficulty"""
     total = 0
     correct = 0
+    avg_time = 0
 
     sampled = random.sample(dataset, amount)
     for quad in sampled:
+        start = time.time()
         solved, _, _ = complete_one_problem(quad, b)
+        end = time.time()
+        avg_time += end - start
         total += 1
         if solved:
             print(f"chat got 24!")
@@ -329,7 +334,7 @@ def run_difficulties_experiment(dataset, amount=10, b=5):
             print(f"chat failed")
         print(f"done {total}")
 
-    return correct/total
+    return correct/total, avg_time/total
 
 
 def run_papers_experiment():
@@ -353,7 +358,9 @@ def cost_of_one_problem(index):
 
 if __name__ == '__main__':
     one, two, three, four, five = util_gameof24.split_data()
-    print(run_difficulties_experiment(one))
+    score, ti = run_difficulties_experiment(one)
+    print(f"score: {score}")
+    print(f"time: {ti}")
 
     # for i in range(10):
     #     x = cost_of_one_problem(i)
