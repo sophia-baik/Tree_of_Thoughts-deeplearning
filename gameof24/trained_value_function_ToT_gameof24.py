@@ -99,7 +99,7 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
 
     # Step 1: Query Chat to combine two of the four initial numbers b * k times
     for i in range(b * k):
-        before, after = util_gameof24.ask_and_parse(PROMPTS["step1"] + str(quad), INSTRUCT)
+        before, after = util_gameof24.ask_and_parse(PROMPTS["step1"] + str(quad), INSTRUCT, False, 1.2)
         if before and after and is_valid_equation(quad, before, after):
             new_nums = find_remaining_nums(quad, before, after)
             new_trace = [f"{before} = {after}"]
@@ -122,7 +122,7 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
     # Step 2: Query Chat to combine two of the four initial numbers b * k times
     for score, state, trace in top_states:
         for i in range(k):
-            before, after = util_gameof24.ask_and_parse(PROMPTS["step2"] + str(state), INSTRUCT)
+            before, after = util_gameof24.ask_and_parse(PROMPTS["step2"] + str(state), INSTRUCT, False, 1.2)
             if before and after and is_valid_equation(state, before, after):
                 new_nums = find_remaining_nums(state, before, after)
                 new_trace = trace + [f"{before} = {after}"]
@@ -180,7 +180,7 @@ def run_experiment(amount, b):
     fallback = 0
     if amount == "all":
         amount = len(df)
-    for i in range(200,210):
+    for i in range(900,910):
         quad = df[i]
         res = complete_one_problem(quad, b)
         total += 1

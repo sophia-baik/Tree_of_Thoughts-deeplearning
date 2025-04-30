@@ -85,7 +85,7 @@ def papers_data():
     return puzzles
 
 
-def ask_chat(query: str, model: str, instruction: str):
+def ask_chat(query: str, model: str, instruction: str, temperature: int = 1.0):
     """sends prompt to chattgpt and returns chat's response"""
     completion = client.chat.completions.create(
         model=model,
@@ -95,9 +95,10 @@ def ask_chat(query: str, model: str, instruction: str):
                 "role": "user",
                 "content": query
             }
-        ]
+        ],
+        temperature = temperature
     )
-
+    
     return (completion.choices[0].message.content)
 
 
@@ -149,12 +150,12 @@ def parse_math_expression(response: str):
     return before_equals, after_equals
 
 
-def ask_and_parse(prompt: str, INSTRUCT: str, out_tokens: bool = False):
+def ask_and_parse(prompt: str, INSTRUCT: str, out_tokens: bool = False, temperature: int = 1.0):
     """
     Asks Chat using prompt. Parses resultant expression.
     Returns None, None for malformed inputs.
     """
-    response = ask_chat(prompt, MODEL, INSTRUCT)
+    response = ask_chat(prompt, MODEL, INSTRUCT, temperature)
 
     # print("----- RAW CHAT RESPONSE -----")
     # print(response)
@@ -239,8 +240,9 @@ def extract_features(quad: List[int]) -> List[int]:
         features.append(sum(x == key_val for x in quad))
     mean_val = sum(quad) / len(quad)
     max_val = max(quad)
+    min_val = min(quad) if len(quad) > 0 else 0
     std_dev = (sum((x - mean_val)**2 for x in quad) / len(quad))**0.5
 
-    features.extend([mean_val, max_val, std_dev])
+    features.extend([mean_val, max_val, std_dev, min_val])
     return quad + features
 

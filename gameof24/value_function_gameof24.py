@@ -96,28 +96,38 @@ def generate_training_data(data, max_depth = 3):
   return X, Y
 
 class ValueNetwork(nn.Module):
-  def __init__(self):
-      super(ValueNetwork, self).__init__()
-      self.fc1 = nn.Linear(36, 128)
-      self.bn1 = nn.BatchNorm1d(128)
-      self.dropout1 = nn.Dropout(0.3)
-
-      self.fc2 = nn.Linear(128, 128)
-      self.bn2 = nn.BatchNorm1d(128)
-      self.dropout2 = nn.Dropout(0.3)
-
-      self.fc3 = nn.Linear(128, 64)
-      self.bn3 = nn.BatchNorm1d(64)
-      
-      self.fc4 = nn.Linear(64, 1)
+  def __init__(self, input_size=37, hidden_sizes=[128, 128, 64], dropout_rates=[0.3, 0.3, 0.2]):
+        super(ValueNetwork, self).__init__()
+        
+        self.fc1 = nn.Linear(input_size, hidden_sizes[0])
+        self.ln1 = nn.LayerNorm(hidden_sizes[0])
+        self.dropout1 = nn.Dropout(dropout_rates[0])
+        
+        self.fc2 = nn.Linear(hidden_sizes[0], hidden_sizes[1])
+        self.ln2 = nn.LayerNorm(hidden_sizes[1])
+        self.dropout2 = nn.Dropout(dropout_rates[1])
+        
+        self.fc3 = nn.Linear(hidden_sizes[1], hidden_sizes[2])
+        self.ln3 = nn.LayerNorm(hidden_sizes[2])
+        self.dropout3 = nn.Dropout(dropout_rates[2])
+        
+        self.fc4 = nn.Linear(hidden_sizes[2], 1)
+        
+        self.skip_connection = nn.Linear(hidden_sizes[0], hidden_sizes[1]) if hidden_sizes[0] != hidden_sizes[1] else nn.Identity()
 
   def forward(self, x):
-      x = F.relu(self.bn1(self.fc1(x)))
-      x = self.dropout1(x)
-      x = F.relu(self.bn2(self.fc2(x)))
-      x = self.dropout2(x)
-      x = F.relu(self.bn3(self.fc3(x)))
-      return self.fc4(x)
+      layer1 = F.leaky_relu(self.ln1(self.fc1(x)), negative_slope = 0.01)
+      layer1 = self.dropout1(layer1)
+
+      layer2_pre = self.ln2(self.fc2(layer1))
+      skip = self.skip_connection(layer1)
+      layer2 = F.leaky_relu(layer2_pre + skip, negative_slope=0.01)
+      layer2 = self.dropout2(layer2)     
+      
+      layer3 = F.leaky_relu(self.ln3(self.fc3(layer2)), negative_slope=0.01)
+      layer3 = self.dropout3(layer3)
+
+      return self.fc4(layer3)
 
 def train_value_network(X_train, y_train, epochs=10, batch_size=32):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
