@@ -209,9 +209,11 @@ def total_cost(input_tokens: int, output_tokens: int) -> float:
 
     return input_rate*input_tokens + output_rate*output_tokens
 
+
 def pad(state):
-  state = list(state)
-  return [0] * (4 - len(state)) + state
+    state = list(state)
+    return [0] * (4 - len(state)) + state
+
 
 def extract_features(quad: List[int]) -> List[int]:
     """
@@ -222,19 +224,22 @@ def extract_features(quad: List[int]) -> List[int]:
     """
     features = []
     quad = pad(quad)
-    
+
     # Are there pairs that sum to nice values?
     for i in range(len(quad)):
         for j in range(i+1, len(quad)):
             a, b = quad[i], quad[j]
-            features.append(1 - min(abs((a + b) - 24) / 24, 1.0))   # closeness of sum to 24
-            features.append(1 - min(abs((a * b) - 24) / 24, 1.0))   # closeness of product to 24
-            features.append(1 - min(abs((a - b) - 24) / 24, 1.0))   # closeness of diff to 24
+            # closeness of sum to 24
+            features.append(1 - min(abs((a + b) - 24) / 24, 1.0))
+            # closeness of product to 24
+            features.append(1 - min(abs((a * b) - 24) / 24, 1.0))
+            # closeness of diff to 24
+            features.append(1 - min(abs((a - b) - 24) / 24, 1.0))
             if b != 0:
                 features.append(1 - min(abs((a / b) - 24) / 24, 1.0))
             else:
                 features.append(0.0)
-    
+
     # Are there factors of 24?
     for key_val in [6, 8, 12, 24, 1]:
         features.append(sum(x == key_val for x in quad))
@@ -245,4 +250,3 @@ def extract_features(quad: List[int]) -> List[int]:
 
     features.extend([mean_val, max_val, std_dev, min_val])
     return quad + features
-
