@@ -314,24 +314,27 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3, count_tokens: bool
         if "no" in last_response.lower():
             continue
 
-        lines = last_response.split('\n')
-        last_line = lines[-1]
-        if len(last_line.strip()) == 0:
-            last_line = lines[-2]
-        if "=" in last_line:
-            try:
-                last_before = last_line.split("=")[0].strip()
-                last_after = last_line.split("=")[1].strip()
-            except:
-                print("step 3: i think format was off: yes equals\n")
-                print(last_line)
-        else:
-            try:
-                last_before = last_line.strip()
-                last_after = str(eval(last_before))
-            except:
-                print("step 3: i think format was off: no equals\n")
-                print(last_line)
+        last_before, last_after = util_gameof24.parse_math_expression(
+            last_response)
+
+        # lines = last_response.split('\n')
+        # last_line = lines[-1]
+        # if len(last_line.strip()) == 0:
+        #     last_line = lines[-2]
+        # if "=" in last_line:
+        #     try:
+        #         last_before = last_line.split("=")[0].strip()
+        #         last_after = last_line.split("=")[1].strip()
+        #     except:
+        #         print("step 3: i think format was off: yes equals\n")
+        #         print(last_line)
+        # else:
+        #     try:
+        #         last_before = last_line.strip()
+        #         last_after = str(eval(last_before))
+        #     except:
+        #         print("step 3: i think format was off: no equals\n")
+        #         print(last_line)
 
         # verify chat's answer is valid
         if is_valid_equation(last_nums, last_before, last_after):
@@ -369,6 +372,18 @@ def run_experiment(amount, b):
     return correct/total
 
 
+def run_papers_experiment():
+    total = 0
+    correct = 0
+    for i in range(901, 1001):
+        quad = puzzles[i]
+        solved, _, _ = complete_one_problem(quad, 5)
+        total += 1
+        if solved:
+            correct += 1
+    return correct/total
+
+
 def cost_of_one_problem(index):
     quad = numbers[index]
     solved, input_tokens, output_tokens = complete_one_problem(
@@ -377,13 +392,14 @@ def cost_of_one_problem(index):
 
 
 if __name__ == '__main__':
-    for i in range(362, 362+5):
-        x = cost_of_one_problem(i)
-        print(x[0], x[1], x[2])
+    # for i in range(362, 362+5):
+    #     x = cost_of_one_problem(i)
+    #     print(x[0], x[1], x[2])
     # outputs = []
     # x = run_experiment(1, 5)
     # outputs.append(x)
-    # print(x)  # returns 0.68 on first run
+    x = run_papers_experiment()
+    print(x)  # returns 0.68 on first run
     # print("\nfinal outputs\n")
     # print(outputs)
     # complete_one_problem([4, 6, 12, 13], 5)
