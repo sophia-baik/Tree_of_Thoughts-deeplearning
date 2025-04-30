@@ -27,6 +27,39 @@ def import_data():
     return numbers
 
 
+def split_data():
+    """
+    split data by difficulty (number of solutions)
+    ---
+    one : 90 - rest solutions
+    two : 30 - 89 solutions
+    three : 20 - 29 solutions
+    four : 10 - 19 solutions
+    five : 1-9 solutions
+    """
+    five = []
+    four = []
+    three = []
+    two = []
+    one = []
+
+    df = pd.read_csv("gameof24/24game_problems.csv")
+
+    for index, row in df.iterrows():
+        if row["num_solutions"] < 10:
+            five.append(literal_eval(row["numbers"]))
+        elif row["num_solutions"] < 20:
+            four.append(literal_eval(row["numbers"]))
+        elif row["num_solutions"] < 30:
+            three.append(literal_eval(row["numbers"]))
+        elif row["num_solutions"] < 90:
+            two.append(literal_eval(row["numbers"]))
+        else:
+            one.append(literal_eval(row["numbers"]))
+
+    return one, two, three, four, five
+
+
 def string_numbers_to_list(nums: str) -> list:
     """
     puts numbers in [nums] into list

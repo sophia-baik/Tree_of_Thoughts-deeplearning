@@ -130,30 +130,6 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3, count_tokens: bool
                                                      str_quad) + util_gameof24.num_tokens(INSTRUCT)
             output_tokens += out_tokens
 
-        # This is quite hard coded; we'll be in trouble if Chat deviates from instructions
-        # lines = response.split('\n')
-        # last_line = lines[-1]
-        # if len(last_line.strip()) == 0:
-        #     last_line = lines[-2]
-
-        # if "=" in last_line:
-        #     try:
-        #         before_equals = last_line.split("=")[0].strip()
-        #         after_equals = last_line.split("=")[1].strip()
-        #     except:
-        #         print("step 1: i think format was off: yes equals\n")
-        #         print(last_line)
-        # else:
-        #     try:
-        #         before_equals = last_line.strip()
-        #         after_equals = str(eval(before_equals))
-        #     except:
-        #         print("step 1: i think format was off: no equals\n")
-        #         print(last_line)
-
-            # before_equals = last_line.strip()
-            # after_equals = eval(before_equals)
-
         if is_valid_equation(quad, before_equals, after_equals):
             # correct += 1
             # valid responses contains tuples
@@ -233,26 +209,6 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3, count_tokens: bool
                                                          str(nums)) + util_gameof24.num_tokens(INSTRUCT)
                 output_tokens += out_tokens
 
-            # # This is quite hard coded; we'll be in trouble if Chat deviates from instructions
-            # lines = child_response.split('\n')
-            # last_line = lines[-1]
-            # if len(last_line.strip()) == 0:
-            #     last_line = lines[-2]
-            # if "=" in last_line:
-            #     try:
-            #         child_before = last_line.split("=")[0].strip()
-            #         child_after = last_line.split("=")[1].strip()
-            #     except:
-            #         print("step 2: i think format was off: yes equals\n")
-            #         print(last_line)
-            # else:
-            #     try:
-            #         child_before = last_line.strip()
-            #         child_after = str(eval(child_before))
-            #     except:
-            #         print("step 2: i think format was off: no equals\n")
-            #         print(last_line)
-
             # for each new answer, verify chat's answer is valid; if not, prune
             if is_valid_equation(nums, child_before, child_after):
                 valid_child_responses.append((child_before, child_after))
@@ -261,29 +217,10 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3, count_tokens: bool
         for i in range(val_counter, val_length):
             before, after = valid_child_responses[i]
             # get remanining numbers
-            # rem_nums = find_remaining_nums(nums, before, after)
-
-            # # ask chat to evaluate
-            # response = util_gameof24.ask_chat(value_prompt.replace(
-            #     "{input}", str(rem_nums)), util_gameof24.MODEL, short_instruct)
-            # response = parse_chats_eval_answer(response)
-            # if response == "sure":
-            #     sure_nums.append(rem_nums)
-            # elif response == "maybe":
-            #     maybe_nums.append(rem_nums)
 
             remaining_child_numbers.append(
                 find_remaining_nums(nums, before, after))
             val_counter += 1
-
-    # # select b
-    # if len(sure_nums) >= b:
-    #     remaining_child_numbers = random.sample(sure_nums, b)
-    # elif len(sure_nums) + len(maybe_nums) >= b:
-    #     left = b - len(sure_nums)
-    #     remaining_child_numbers = sure_nums + random.sample(maybe_nums, left)
-    # else:
-    #     remaining_child_numbers = sure_nums + maybe_nums
 
     # print(remaining_child_numbers)
 
@@ -317,42 +254,23 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3, count_tokens: bool
         last_before, last_after = util_gameof24.parse_math_expression(
             last_response)
 
-        # lines = last_response.split('\n')
-        # last_line = lines[-1]
-        # if len(last_line.strip()) == 0:
-        #     last_line = lines[-2]
-        # if "=" in last_line:
-        #     try:
-        #         last_before = last_line.split("=")[0].strip()
-        #         last_after = last_line.split("=")[1].strip()
-        #     except:
-        #         print("step 3: i think format was off: yes equals\n")
-        #         print(last_line)
-        # else:
-        #     try:
-        #         last_before = last_line.strip()
-        #         last_after = str(eval(last_before))
-        #     except:
-        #         print("step 3: i think format was off: no equals\n")
-        #         print(last_line)
-
         # verify chat's answer is valid
         if is_valid_equation(last_nums, last_before, last_after):
             valid_last_responses.append(last_response)
             if eval(last_before) == 24:
                 got24 = True
         if got24:
-            print("Chat got 24!")
+            # print("Chat got 24!")
             break
 
-    if not got24:
-        print("chat failed")
+    # if not got24:
+    #     print("chat failed")
 
     # print(remaining_child_numbers)
     # print(last_responses)
     # print(valid_last_responses)
 
-    print("\n\ndone one problem\n\n")
+    # print("\n\ndone one problem\n\n")
 
     return got24, input_tokens, output_tokens
 
@@ -369,6 +287,25 @@ def run_experiment(amount, b):
         total += 1
         if solved:
             correct += 1
+    return correct/total
+
+
+def run_difficulties_experiment(dataset, amount=10, b=5):
+    """dataset is a list of quad numbers of a specific difficulty"""
+    total = 0
+    correct = 0
+
+    sampled = random.sample(dataset, amount)
+    for quad in sampled:
+        solved, _, _ = complete_one_problem(quad, b)
+        total += 1
+        if solved:
+            print(f"chat got 24!")
+            correct += 1
+        else:
+            print(f"chat failed")
+        print(f"done {total}")
+
     return correct/total
 
 
@@ -392,14 +329,17 @@ def cost_of_one_problem(index):
 
 
 if __name__ == '__main__':
-    # for i in range(362, 362+5):
+    one, two, three, four, five = util_gameof24.split_data()
+    print(run_difficulties_experiment(one))
+
+    # for i in range(10):
     #     x = cost_of_one_problem(i)
     #     print(x[0], x[1], x[2])
     # outputs = []
     # x = run_experiment(1, 5)
     # outputs.append(x)
-    x = run_papers_experiment()
-    print(x)  # returns 0.68 on first run
+    # x = run_papers_experiment()
+    # print(x)  # returns 0.68 on first run
     # print("\nfinal outputs\n")
     # print(outputs)
     # complete_one_problem([4, 6, 12, 13], 5)
