@@ -1,3 +1,4 @@
 .DS_Store
 __pycache__/
 *.env
+gameof24/data_zeroshot/
