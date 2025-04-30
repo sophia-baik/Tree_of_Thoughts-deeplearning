@@ -73,9 +73,10 @@ def parse_math_expression(response: str):
     math_line = None
     for line in reversed(response):
         # chat may directly copy the "Remaining numbers" line from the prompt.
-        if any(op in line for op in ['+', '-', '*', '/']) and \
+        if any(op in line for op in ['+', '-', '*', '/', 'x']) and \
                 'Remaining numbers' not in line:
             math_line = line.strip()
+            math_line = math_line.replace("x","*")
             break
     if math_line is None:
         raise ValueError("No valid math expression found in response.")
