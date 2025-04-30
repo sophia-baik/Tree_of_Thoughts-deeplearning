@@ -18,15 +18,18 @@ MLP expects fixed sized input so we pad our feature space with zeroes, maybe app
 Loss: binary cross entropy
 """
 
-import random
 import itertools
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import pandas as pd
+import numpy as np
 import ast
 from typing import List
+from torch.utils.data import DataLoader, TensorDataset
+from util_gameof24 import extract_features
+from sklearn.metrics import f1_score, precision_score, recall_score,precision_recall_fscore_support
 
 data_path = "gameof24/24game_problems.csv"
 
@@ -34,6 +37,10 @@ df = pd.read_csv(data_path)
 game_of_24_quads = [ast.literal_eval(x) for x in df['numbers']]
 
 def simulate_paths(quad, max_depth = 3):
+  """
+  Simulates all possible actions that the LLM can take to combine numbers.
+  Encompasses all pairs of numbers and all operations.
+  """
   visited = set()
   success = set()
 
@@ -63,17 +70,14 @@ def simulate_paths(quad, max_depth = 3):
     for (i, j) in itertools.combinations(range(len(state)), 2):
       a, b = state[i], state[j]
 
-      candidates = []
-      candidates.append(a + b)
-      candidates.append(a - b)
-      candidates.append(b - a)
-      candidates.append(a * b)
+      candidates = [a + b, a - b, b - a, a * b]
       if a != 0:
         candidates.append(b / a)
       if b != 0:
         candidates.append(a / b)
 
       for new_num in candidates:
+        # create a new num using the created candidate and the other nums we didn't use
         new_state = [state[k] for k in range(len(state)) if k != i and k != j] + [new_num]
         dfs(new_state, depth-1, path)
 
@@ -87,18 +91,14 @@ def generate_training_data(data, max_depth = 3):
   for quad in data:
     reachable_states = simulate_paths(quad, max_depth)
     for state, value in reachable_states:
-      X.append(pad(state))
+      X.append(extract_features(state))  
       Y.append(int(value))
   return X, Y
-
-def pad(state):
-  state = list(state)
-  return [0] * (4 - len(state)) + state
 
 class ValueNetwork(nn.Module):
   def __init__(self):
       super(ValueNetwork, self).__init__()
-      self.fc1 = nn.Linear(17, 128)
+      self.fc1 = nn.Linear(36, 128)
       self.bn1 = nn.BatchNorm1d(128)
       self.dropout1 = nn.Dropout(0.3)
 
@@ -112,66 +112,82 @@ class ValueNetwork(nn.Module):
       self.fc4 = nn.Linear(64, 1)
 
   def forward(self, x):
-      quad = x[:,:4]
-      features = self.extract_features(quad)
-
-      x = torch.cat([quad,features], dim = 1)
-
       x = F.relu(self.bn1(self.fc1(x)))
       x = self.dropout1(x)
       x = F.relu(self.bn2(self.fc2(x)))
       x = self.dropout2(x)
       x = F.relu(self.bn3(self.fc3(x)))
-      x = torch.sigmoid(self.fc4(x))
-      return x
-
-def extract_features(quad: List[int]):
-    features = []
-    
-    # Are there pairs that sum to nice values?
-    for i in range(len(quad)):
-        for j in range(i+1, len(quad)):
-            sum = quad[i] + quad[j]
-            product = quad[i] * quad[j]
-            features.append(1 if sum in [12, 24, 8, 6] else 0)
-            features.append(1 if product in [12, 24, 8, 6] else 0)
-    
-    # Are there factors of 24?
-    features.append(1 if any(n in [2, 3, 4, 6, 8, 12] for n in quad) else 0)
-    
-    return features
+      return self.fc4(x)
 
 def train_value_network(X_train, y_train, epochs=10, batch_size=32):
-    model = ValueNetwork()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
-    loss_fn = nn.BCELoss()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     X_train = torch.tensor(X_train, dtype=torch.float32)
     y_train = torch.tensor(y_train, dtype=torch.float32).unsqueeze(1)
 
+    dataset = TensorDataset(X_train, y_train)
+    loader = DataLoader(dataset, batch_size = batch_size, shuffle=True)
+
+    model = ValueNetwork().to(device)
+
+    pos_weight_value = (len(y_train) - y_train.sum()) / (y_train.sum() + 1e-6)
+    loss_fn = nn.BCEWithLogitsLoss(pos_weight=pos_weight_value.to(device))
+
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=3, factor=0.5)
+
     for epoch in range(epochs):
+      model.train()
       total_loss = 0
       correct = 0
-      # create a random permutation of the data then create batches
-      perm = torch.randperm(len(X_train))
-      for i in range(0, len(X_train), batch_size):
-          idx = perm[i:i+batch_size]
-          batch_x = X_train[idx]
-          batch_y = y_train[idx]
+      total = 0
+      all_preds = []
+      all_probs = []
+      all_labels = []
 
-          optimizer.zero_grad()
-          preds = model(batch_x)
-          loss = loss_fn(preds, batch_y)
-          loss.backward()
-          optimizer.step()
+      for batch_x, batch_y in loader:
+        batch_x = batch_x.to(device)
+        batch_y = batch_y.to(device)
+      
+        optimizer.zero_grad()
+        logits = model(batch_x)
+        loss = loss_fn(logits, batch_y)
+        loss.backward()
+        optimizer.step()
 
-          total_loss += loss.item() * batch_x.size(0)
-          pred_labels = (preds > 0.5).float()
-          correct += (pred_labels == batch_y).sum().item()
+        total_loss += loss.item() * batch_x.size(0)
+        preds = (torch.sigmoid(logits) > 0.5).float()
+        correct += (preds == batch_y).sum().item()
+        total += batch_x.size(0)
 
-      avg_loss = total_loss / len(X_train)
-      accuracy = correct / len(X_train)
-      print(f"Epoch {epoch+1}: Loss = {avg_loss:.4f}, Accuracy = {accuracy:.4f}")
+        probs = torch.sigmoid(logits).detach().cpu().numpy()
+        labels = batch_y.detach().cpu().numpy()
+        binary_preds = (probs > 0.4).astype(int)
+
+        all_probs.extend(probs.flatten())
+        all_preds.extend(binary_preds.flatten())
+        all_labels.extend(labels.flatten())
+
+        correct += (binary_preds.flatten() == labels.flatten()).sum()
+        total += batch_x.size(0)
+
+      avg_loss = total_loss / total
+      accuracy = correct / total
+      f1 = f1_score(all_labels, all_preds)
+      precision = precision_score(all_labels, all_preds)
+      recall = recall_score(all_labels, all_preds)
+
+      # Finds the best threshold to use for our Binary Cross Entropy Loss
+      # ("\nThreshold Sweep:")
+      # for thresh in np.arange(0.1, 0.9, 0.1):
+      #     binary_preds = (np.array(all_probs) > thresh).astype(int)
+      #     p, r, f, _ = precision_recall_fscore_support(all_labels, binary_preds, average='binary', zero_division=0)
+      #     print(f"Thresh={thresh:.2f} | F1: {f:.3f}, Precision: {p:.3f}, Recall: {r:.3f}")
+
+      print(f"Epoch {epoch+1}: Loss = {avg_loss:.4f}, Accuracy = {accuracy:.4f}, "
+            f"F1 = {f1:.4f}, Precision = {precision:.4f}, Recall = {recall:.4f}")
+
+      scheduler.step(avg_loss)
 
     return model
 
@@ -179,6 +195,8 @@ if __name__ == "__main__":
     df = pd.read_csv("gameof24/24game_problems.csv")
     game_of_24_quads = [ast.literal_eval(x) for x in df['numbers']]
 
+    import random
     States, Values = generate_training_data(game_of_24_quads)
-    model = train_value_network(States, Values, epochs=10, batch_size=32)
+    print(f"Positive rate: {sum(Values)/len(Values):.4f}")
+    model = train_value_network(States, Values, epochs=10, batch_size=256)
     torch.save(model.state_dict(), 'value_network.pth')

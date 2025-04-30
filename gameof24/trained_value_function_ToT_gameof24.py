@@ -2,6 +2,7 @@ import util_gameof24
 import torch
 import time
 from value_function_gameof24 import ValueNetwork
+from util_gameof24 import extract_features, pad
 
 # Instructions and Prompts
 INSTRUCT = "You are a game of 24 grandmaster. We are going to take this problem step by step. At each step, you are going to pick only 2 numbers to operate on. Put only the mathematical expression you choose on the last line and nothing else. Don't put any of the math in latex or markdown formats."
@@ -17,7 +18,7 @@ df = util_gameof24.papers_data()
 
 # Load weights from pretrained network
 value_model = ValueNetwork()
-value_model.load_state_dict(torch.load('gameof24/weighted_loss_value_network.pth', weights_only = True))
+value_model.load_state_dict(torch.load('gameof24/value_network.pth', weights_only = True))
 value_model.eval()
 
 def evaluate_states(states):
@@ -26,7 +27,7 @@ def evaluate_states(states):
     we should sort and pad correspondingly. Batch evaluates multiple states for
     all efficiency. States is a list of list of numbers.
     """
-    processed = [[0] * (4 - len(sorted(s))) + sorted(s) for s in states]
+    processed = [extract_features(s) for s in states]
     x = torch.tensor(processed, dtype=torch.float32)
     with torch.no_grad():
         return value_model(x).squeeze(1).tolist()
@@ -93,6 +94,8 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
     """
     ### Step 1 ###
     step1_raw = []
+    print("#######################")
+    print("Original Problem:", quad)
 
     # Step 1: Query Chat to combine two of the four initial numbers b * k times
     for i in range(b * k):
@@ -104,12 +107,13 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
 
     if not step1_raw:
         print("Error: Step 1 failed with no valid candidates.")
-        return False
+        return 0
 
     # Step 1: Find the k states with the highest scores according to the evaluator.
     scores = evaluate_states([state for state, _ in step1_raw])
     step1_candidates = sorted(zip(scores, step1_raw), reverse=True)[:b]
     top_states = [(score, s, trace) for score, (s, trace) in step1_candidates]
+    print(top_states)
     print("\nStep 1 Complete.\n")
 
     ### Step 2 ###
@@ -126,49 +130,67 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
 
     if not step2_raw:
         print("Error: Step 2 failed with no valid candidates.")
-        return False
+        return 0
 
     # Step 2: Find the k states with the highest scores according to the evaluator.
     scores = evaluate_states([state for state, _ in step2_raw])
     step2_candidates = sorted(zip(scores, step2_raw), reverse=True)[:b]
     top_states = [(score, s, trace) for score, (s, trace) in step2_candidates]
+    print(top_states)
     print("\nStep 2 Complete.\n")
 
     ### Step 3 ###
-    valid_response_attempts = []
-
-    print("Original Problem: " + str(quad))
-    # Step 3: Query Chat to combine the remaining two numbers min(k, 4) times.
     for score, state, trace in top_states:
-        prompt = PROMPTS["step3"].replace("<INSERT NUMBERS>", str(state))
-        before, after = util_gameof24.ask_and_parse(prompt, INSTRUCT)
-        if before and after and is_valid_equation(state, before, after):
-            new_trace = trace + [f"{before} = {after}"]
-            if abs(eval(before) - 24) < 1e-6:
-                print("Chat solved it using expressions: " + ", ".join(new_trace))
-                return True
-            else:
-                print("Chat tried his best with " + ", ".join(new_trace))
+        a, b = state
+        # 1) Ask Chat up to k times, as before
+        for _ in range(k):
+            before, after = util_gameof24.ask_and_parse(
+                PROMPTS["step3"].replace("<INSERT NUMBERS>", str(state)),
+                INSTRUCT
+            )
+            if before and after and is_valid_equation(state, before, after):
+                if abs(eval(after) - 24) < 1e-6:
+                    print("Chat solved it with:", trace + [f"{before} = {after}"])
+                    return 1
+
+        # 2) **Fallback brute-force** on the last two numbers
+        a, b = state
+        candidates = {
+            f"{a} + {b}": a + b,
+            f"{a} - {b}": a - b,
+            f"{b} - {a}": b - a,
+            f"{a} * {b}": a * b
+        }
+        if b != 0: candidates[f"{a} / {b}"] = a / b
+        if a != 0: candidates[f"{b} / {a}"] = b / a
+
+        # Pick any that exactly hits 24
+        for expr, val in candidates.items():
+            if abs(val - 24) < 1e-6:
+                print("Fallback solved it with:", trace + [f"{expr} = {int(val)}"])
+                return 2
 
     print("Chat failed.")
-    print("\n\nFinished problem.\n\n")
-
-    return False
+    return 0
 
 def run_experiment(amount, b):
     start_time = time.time()
     total = 0
     correct = 0
+    fallback = 0
     if amount == "all":
         amount = len(df)
-    for i in range(1,10):
+    for i in range(200,210):
         quad = df[i]
-        solved = complete_one_problem(quad, b)
+        res = complete_one_problem(quad, b)
         total += 1
-        if solved:
+        if res == 2 or res == 1:
             correct += 1
+        if res == 2:
+            fallback += 1
     time_elapsed = time.time() - start_time
     print(f"\nFinished {total} problems in {time_elapsed:.2f} seconds.")
+    print("Fellback on " + str(fallback) + " problems.")
     return correct/total
 
 
