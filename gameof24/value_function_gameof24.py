@@ -26,8 +26,11 @@ import torch.optim as optim
 import torch.nn.functional as F
 import pandas as pd
 import ast
+from typing import List
 
-df = pd.read_csv("gameof24/24game_problems.csv")
+data_path = "gameof24/24game_problems.csv"
+
+df = pd.read_csv(data_path)
 game_of_24_quads = [ast.literal_eval(x) for x in df['numbers']]
 
 def simulate_paths(quad, max_depth = 3):
@@ -95,15 +98,48 @@ def pad(state):
 class ValueNetwork(nn.Module):
   def __init__(self):
       super(ValueNetwork, self).__init__()
-      self.fc1 = nn.Linear(4, 64)
-      self.fc2 = nn.Linear(64, 64)
-      self.fc3 = nn.Linear(64, 1)
+      self.fc1 = nn.Linear(17, 128)
+      self.bn1 = nn.BatchNorm1d(128)
+      self.dropout1 = nn.Dropout(0.3)
+
+      self.fc2 = nn.Linear(128, 128)
+      self.bn2 = nn.BatchNorm1d(128)
+      self.dropout2 = nn.Dropout(0.3)
+
+      self.fc3 = nn.Linear(128, 64)
+      self.bn3 = nn.BatchNorm1d(64)
+      
+      self.fc4 = nn.Linear(64, 1)
 
   def forward(self, x):
-      x = F.relu(self.fc1(x))
-      x = F.relu(self.fc2(x))
-      x = torch.sigmoid(self.fc3(x))
+      quad = x[:,:4]
+      features = self.extract_features(quad)
+
+      x = torch.cat([quad,features], dim = 1)
+
+      x = F.relu(self.bn1(self.fc1(x)))
+      x = self.dropout1(x)
+      x = F.relu(self.bn2(self.fc2(x)))
+      x = self.dropout2(x)
+      x = F.relu(self.bn3(self.fc3(x)))
+      x = torch.sigmoid(self.fc4(x))
       return x
+
+def extract_features(quad: List[int]):
+    features = []
+    
+    # Are there pairs that sum to nice values?
+    for i in range(len(quad)):
+        for j in range(i+1, len(quad)):
+            sum = quad[i] + quad[j]
+            product = quad[i] * quad[j]
+            features.append(1 if sum in [12, 24, 8, 6] else 0)
+            features.append(1 if product in [12, 24, 8, 6] else 0)
+    
+    # Are there factors of 24?
+    features.append(1 if any(n in [2, 3, 4, 6, 8, 12] for n in quad) else 0)
+    
+    return features
 
 def train_value_network(X_train, y_train, epochs=10, batch_size=32):
     model = ValueNetwork()

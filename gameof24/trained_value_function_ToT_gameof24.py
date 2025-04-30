@@ -1,8 +1,7 @@
 import util_gameof24
-from value_function_gameof24 import ValueNetwork 
-
 import torch
 import time
+from value_function_gameof24 import ValueNetwork
 
 # Instructions and Prompts
 INSTRUCT = "You are a game of 24 grandmaster. We are going to take this problem step by step. At each step, you are going to pick only 2 numbers to operate on. Put only the mathematical expression you choose on the last line and nothing else. Don't put any of the math in latex or markdown formats."
@@ -14,7 +13,7 @@ PROMPTS = {
 
 # Load game of 24 data
 # Note that the hardest problems are stored at the beginning.
-df = util_gameof24.import_data() 
+df = util_gameof24.papers_data() 
 
 # Load weights from pretrained network
 value_model = ValueNetwork()
@@ -162,7 +161,7 @@ def run_experiment(amount, b):
     correct = 0
     if amount == "all":
         amount = len(df)
-    for i in range(361,371):
+    for i in range(1,10):
         quad = df[i]
         solved = complete_one_problem(quad, b)
         total += 1
