@@ -27,13 +27,26 @@ def import_data():
     return numbers
 
 
+def string_numbers_to_list(nums: str) -> list:
+    """
+    puts numbers in [nums] into list
+    """
+    lis = []
+    for n in nums:
+        if n.isdigit():
+            lis.append(eval(n))
+    return lis
+
+
 def papers_data():
     """
     imports dataset paper uses
     """
     df = pd.read_csv("gameof24/24.csv")
-    df["puzzles"] = df["puzzles"].apply(literal_eval)
-    puzzles = df["puzzles"].tolist()
+    df["Puzzles"] = df["Puzzles"].apply(string_numbers_to_list)
+    # for i in range(len(df["puzzles"])):
+    #     df["puzzles", i] = string_numbers_to_list(df["puzzles", i])
+    puzzles = df["Puzzles"].tolist()
     return puzzles
 
 
@@ -86,7 +99,7 @@ def parse_math_expression(response: str):
         if any(op in line for op in ['+', '-', '*', '/', 'x']) and \
                 'Remaining numbers' not in line:
             math_line = line.strip()
-            math_line = math_line.replace("x","*")
+            math_line = math_line.replace("x", "*")
             break
     if math_line is None:
         raise ValueError("No valid math expression found in response.")

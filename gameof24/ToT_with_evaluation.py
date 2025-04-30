@@ -342,11 +342,11 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3, count_tokens: bool
             if eval(last_before) == 24:
                 got24 = True
         if got24:
-            # print("Chat got 24!")
+            print("Chat got 24!")
             break
 
-    # if not got24:
-    #     print("chat failed")
+    if not got24:
+        print("chat failed")
 
     # print(remaining_child_numbers)
     # print(last_responses)
@@ -375,7 +375,7 @@ def run_experiment(amount, b):
 def run_papers_experiment():
     total = 0
     correct = 0
-    for i in range(901, 1001):
+    for i in range(901, 906):
         quad = puzzles[i]
         solved, _, _ = complete_one_problem(quad, 5)
         total += 1
