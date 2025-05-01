@@ -85,7 +85,7 @@ def papers_data():
     return puzzles
 
 
-def ask_chat(query: str, model: str, instruction: str, temperature: int = 1.0):
+def ask_chat(query: str, model: str, instruction: str, should_return_cost: bool = False, temperature: int = 1.0):
     """sends prompt to chattgpt and returns chat's response"""
     completion = client.chat.completions.create(
         model=model,
@@ -98,8 +98,12 @@ def ask_chat(query: str, model: str, instruction: str, temperature: int = 1.0):
         ],
         temperature = temperature
     )
-    
-    return (completion.choices[0].message.content)
+    if should_return_cost:
+        usage = completion.usage
+        return completion.choices[0].message.content, usage.prompt_tokens, usage.completion_tokens
+    return completion.choices[0].message.content
+
+
 
 
 def get_file_date_time():
@@ -132,7 +136,7 @@ def parse_math_expression(response: str):
     math_line = None
     for line in reversed(response):
         # chat may directly copy the "Remaining numbers" line from the prompt.
-        if any(op in line for op in ['+', '-', '*', '/', 'x']) and \
+        if any(op in line for op in ['+', '-', '*', '/']) and \
                 'Remaining numbers' not in line:
             math_line = line.strip()
             math_line = math_line.replace("x", "*")
@@ -146,7 +150,8 @@ def parse_math_expression(response: str):
     else:
         # If chat doesn't put an equals sign we have to evaluate for him.
         before_equals = math_line.strip()
-        after_equals = str(eval(before_equals))
+        after_equals = str(eval(before_equals))            
+
     return before_equals, after_equals
 
 
@@ -155,7 +160,10 @@ def ask_and_parse(prompt: str, INSTRUCT: str, out_tokens: bool = False, temperat
     Asks Chat using prompt. Parses resultant expression.
     Returns None, None for malformed inputs.
     """
-    response = ask_chat(prompt, MODEL, INSTRUCT, temperature)
+    if out_tokens:
+        response, input_tokens, output_tokens = ask_chat(prompt, MODEL, INSTRUCT, out_tokens, temperature)
+    else:
+        response = ask_chat(prompt, MODEL, INSTRUCT, out_tokens, temperature)
 
     # print("----- RAW CHAT RESPONSE -----")
     # print(response)
@@ -163,10 +171,13 @@ def ask_and_parse(prompt: str, INSTRUCT: str, out_tokens: bool = False, temperat
 
     try:
         if out_tokens:
-            return parse_math_expression(response), num_tokens(response)
+            before, after = parse_math_expression(response)
+            return before, after, input_tokens, output_tokens
         else:
             return parse_math_expression(response)
     except ValueError:
+        if out_tokens:
+            return None, None, input_tokens, output_tokens
         return None, None
 
 

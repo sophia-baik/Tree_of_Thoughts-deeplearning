@@ -1,6 +1,7 @@
 import util_gameof24
 import torch
 import time
+import random
 from value_function_gameof24 import ValueNetwork
 from util_gameof24 import extract_features, pad
 
@@ -9,8 +10,11 @@ INSTRUCT = "You are a game of 24 grandmaster. We are going to take this problem 
 PROMPTS = {
     "step1": "Numbers: ",
     "step2": "Remaining numbers: ",
-    "step3": "Remaining numbers: <INSERT NUMBERS>. This is the last step. If you cannot obtain 24, put 'No'."
+    "step3": "Remaining numbers: <INSERT NUMBERS>. This is the last step. If you cannot obtain 24, put 'No'.",
+    "prevent_repetition": ". Don't pick these operations that you've already tried: "
 }
+
+debug = False
 
 # Load game of 24 data
 # Note that the hardest problems are stored at the beginning.
@@ -39,19 +43,26 @@ def is_valid_equation(given_numbers: list[int], before_equals: str, after_equals
     2. Checks that only two numbers were chosen.
     3. Checks that the a given number was used at most once.
     """
-    if eval(before_equals) != eval(after_equals):
-        print("Invalid Equation: before_equals is not equivalent to after_equals")
+    try:
+        if eval(before_equals) != eval(after_equals):
+            if debug:
+                print("Invalid Equation: before_equals is not equivalent to after_equals")
+            return False
+    except ValueError:
+        print("Cannot eval.")
         return False
 
     used_numbers = util_gameof24.extract_numbers(before_equals)
     if len(used_numbers) != 2:
-        print("Invalid Equation: More than two numbers used.")
+        if debug:
+            print("Invalid Equation: More than two numbers used.")
         return False
 
     temp = given_numbers.copy()
     for num in used_numbers:
         if num not in temp:
-            print(f"Invalid Equation: {num} incorrectly used (duplicate usage/unavailable)")
+            if debug:
+                print(f"Invalid Equation: {num} incorrectly used (duplicate usage/unavailable)")
             return False
         temp.remove(num)
     return True
@@ -94,64 +105,90 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
     """
     ### Step 1 ###
     step1_raw = []
-    print("#######################")
-    print("Original Problem:", quad)
+    step1_responses = []
+    total_input_tokens = 0
+    total_output_tokens = 0
+    if debug:
+        print("#######################")
+        print("Original Problem:", quad)
 
     # Step 1: Query Chat to combine two of the four initial numbers b * k times
     for i in range(b * k):
-        before, after = util_gameof24.ask_and_parse(PROMPTS["step1"] + str(quad), INSTRUCT, False, 1.2)
+        try:
+            before, after, input_tokens, output_tokens = util_gameof24.ask_and_parse(PROMPTS["step1"] + str(quad) + 
+                                                    PROMPTS["prevent_repetition"] + str(step1_responses), INSTRUCT, True, 1.2)
+        except SyntaxError:
+            return False, total_input_tokens, total_output_tokens
+        total_input_tokens += input_tokens
+        total_output_tokens += output_tokens
         if before and after and is_valid_equation(quad, before, after):
             new_nums = find_remaining_nums(quad, before, after)
             new_trace = [f"{before} = {after}"]
             step1_raw.append((new_nums, new_trace))
+            step1_responses.append(before)
 
     if not step1_raw:
         print("Error: Step 1 failed with no valid candidates.")
-        return 0
+        return 0, total_input_tokens, total_output_tokens
 
     # Step 1: Find the k states with the highest scores according to the evaluator.
     scores = evaluate_states([state for state, _ in step1_raw])
     step1_candidates = sorted(zip(scores, step1_raw), reverse=True)[:b]
     top_states = [(score, s, trace) for score, (s, trace) in step1_candidates]
-    print(top_states)
-    print("\nStep 1 Complete.\n")
+    if debug:
+        print(top_states)
+        print("\nStep 1 Complete.\n")
 
     ### Step 2 ###
     step2_raw = []
+    step2_responses = []
 
     # Step 2: Query Chat to combine two of the four initial numbers b * k times
     for score, state, trace in top_states:
         for i in range(k):
-            before, after = util_gameof24.ask_and_parse(PROMPTS["step2"] + str(state), INSTRUCT, False, 1.2)
+            try:
+                before, after, input_tokens, output_tokens = util_gameof24.ask_and_parse(PROMPTS["step2"] + str(state) +
+                                                        PROMPTS["prevent_repetition"] + str(step2_responses), INSTRUCT, True, 1.2)
+            except SyntaxError:
+                return False, total_input_tokens, total_output_tokens
+            total_input_tokens += input_tokens
+            total_output_tokens += output_tokens
             if before and after and is_valid_equation(state, before, after):
                 new_nums = find_remaining_nums(state, before, after)
                 new_trace = trace + [f"{before} = {after}"]
                 step2_raw.append((new_nums, new_trace))
+                step2_responses.append(before)
 
     if not step2_raw:
         print("Error: Step 2 failed with no valid candidates.")
-        return 0
+        return 0, total_input_tokens, total_output_tokens
 
     # Step 2: Find the k states with the highest scores according to the evaluator.
     scores = evaluate_states([state for state, _ in step2_raw])
     step2_candidates = sorted(zip(scores, step2_raw), reverse=True)[:b]
     top_states = [(score, s, trace) for score, (s, trace) in step2_candidates]
-    print(top_states)
-    print("\nStep 2 Complete.\n")
+    if debug:
+        print(top_states)
+        print("\nStep 2 Complete.\n")
 
     ### Step 3 ###
     for score, state, trace in top_states:
         a, b = state
         # 1) Ask Chat up to k times, as before
         for _ in range(k):
-            before, after = util_gameof24.ask_and_parse(
-                PROMPTS["step3"].replace("<INSERT NUMBERS>", str(state)),
-                INSTRUCT
-            )
+            try:
+                before, after, input_tokens, output_tokens = util_gameof24.ask_and_parse(
+                    PROMPTS["step3"].replace("<INSERT NUMBERS>", str(state)),
+                    INSTRUCT, True, 1.0
+                )
+            except SyntaxError:
+               return False, total_input_tokens, total_output_tokens
+            total_input_tokens += input_tokens
+            total_output_tokens += output_tokens
             if before and after and is_valid_equation(state, before, after):
                 if abs(eval(after) - 24) < 1e-6:
                     print("Chat solved it with:", trace + [f"{before} = {after}"])
-                    return 1
+                    return 1, total_input_tokens, total_output_tokens
 
         # 2) **Fallback brute-force** on the last two numbers
         a, b = state
@@ -168,33 +205,41 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
         for expr, val in candidates.items():
             if abs(val - 24) < 1e-6:
                 print("Fallback solved it with:", trace + [f"{expr} = {int(val)}"])
-                return 2
+                return 2, total_input_tokens, total_output_tokens
 
     print("Chat failed.")
-    return 0
+    return 0, total_input_tokens, total_output_tokens
 
-def run_experiment(amount, b):
+def run_experiment(df, amount, b = 5):
     start_time = time.time()
     total = 0
     correct = 0
     fallback = 0
-    if amount == "all":
-        amount = len(df)
-    for i in range(900,910):
-        quad = df[i]
-        res = complete_one_problem(quad, b)
+
+    df_sample = random.sample(df, amount)
+    total_input_tokens = 0
+    total_output_tokens = 0
+    for quad in df_sample:
+        res, input_tokens, output_tokens = complete_one_problem(quad, b)
+        total_input_tokens += input_tokens
+        total_output_tokens += output_tokens
         total += 1
         if res == 2 or res == 1:
             correct += 1
         if res == 2:
             fallback += 1
     time_elapsed = time.time() - start_time
+    print(f"Used " + str(total_input_tokens) + " input tokens and " + str(total_output_tokens) + " output tokens.")
+    print(f"This cost " + str(util_gameof24.total_cost(total_input_tokens, total_output_tokens)))
     print(f"\nFinished {total} problems in {time_elapsed:.2f} seconds.")
     print("Fellback on " + str(fallback) + " problems.")
     return correct/total
 
-
 if __name__ == '__main__':
-    print(run_experiment(5, 5))  # returns 0.68 on first run
+    one, two, three, four, five = util_gameof24.split_data()
+
+    # for i in range(5):
+
+    print(run_experiment(two, 5))  # returns 0.68 on first run
     #complete_one_problem([1,2,3,4], 5) 
     # print(is_valid_equation([2, 3, 5, 12], "12 + 5", "17"))

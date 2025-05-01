@@ -205,7 +205,6 @@ if __name__ == "__main__":
     df = pd.read_csv("gameof24/24game_problems.csv")
     game_of_24_quads = [ast.literal_eval(x) for x in df['numbers']]
 
-    import random
     States, Values = generate_training_data(game_of_24_quads)
     print(f"Positive rate: {sum(Values)/len(Values):.4f}")
     model = train_value_network(States, Values, epochs=10, batch_size=256)
