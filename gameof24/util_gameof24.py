@@ -96,14 +96,12 @@ def ask_chat(query: str, model: str, instruction: str, should_return_cost: bool 
                 "content": query
             }
         ],
-        temperature = temperature
+        temperature=temperature
     )
     if should_return_cost:
         usage = completion.usage
         return completion.choices[0].message.content, usage.prompt_tokens, usage.completion_tokens
     return completion.choices[0].message.content
-
-
 
 
 def get_file_date_time():
@@ -150,7 +148,7 @@ def parse_math_expression(response: str):
     else:
         # If chat doesn't put an equals sign we have to evaluate for him.
         before_equals = math_line.strip()
-        after_equals = str(eval(before_equals))            
+        after_equals = str(eval(before_equals))
 
     return before_equals, after_equals
 
@@ -161,7 +159,8 @@ def ask_and_parse(prompt: str, INSTRUCT: str, out_tokens: bool = False, temperat
     Returns None, None for malformed inputs.
     """
     if out_tokens:
-        response, input_tokens, output_tokens = ask_chat(prompt, MODEL, INSTRUCT, out_tokens, temperature)
+        response, input_tokens, output_tokens = ask_chat(
+            prompt, MODEL, INSTRUCT, out_tokens, temperature)
     else:
         response = ask_chat(prompt, MODEL, INSTRUCT, out_tokens, temperature)
 
@@ -215,8 +214,8 @@ def total_cost(input_tokens: int, output_tokens: int) -> float:
     """
     returns total cost using o4-mini
     """
-    input_rate = 1.1/1000000  # dollars per one token
-    output_rate = 4.4/1000000  # dollars per one token
+    input_rate = 0.3/1000000  # dollars per one token
+    output_rate = 1.2/1000000  # dollars per one token
 
     return input_rate*input_tokens + output_rate*output_tokens
 
