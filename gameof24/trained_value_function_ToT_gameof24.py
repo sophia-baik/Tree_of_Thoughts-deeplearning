@@ -1,3 +1,5 @@
+# pip install pandas torch tiktoken dotenv openai scikit-learn
+
 import util_gameof24
 import torch
 import time
@@ -240,6 +242,6 @@ if __name__ == '__main__':
 
     # for i in range(5):
 
-    print(run_experiment(two, 5))  # returns 0.68 on first run
+    print(run_experiment(two, 10))  # returns 0.68 on first run
     #complete_one_problem([1,2,3,4], 5) 
     # print(is_valid_equation([2, 3, 5, 12], "12 + 5", "17"))
