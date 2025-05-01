@@ -175,7 +175,7 @@ def ask_and_parse(prompt: str, INSTRUCT: str, out_tokens: bool = False, temperat
             return before, after, input_tokens, output_tokens
         else:
             return parse_math_expression(response)
-    except ValueError:
+    except SyntaxError:
         if out_tokens:
             return None, None, input_tokens, output_tokens
         return None, None

@@ -16,7 +16,7 @@ PROMPTS = {
     "prevent_repetition": ". Don't pick these operations that you've already tried: "
 }
 
-debug = False
+debug = True
 
 # Load game of 24 data
 # Note that the hardest problems are stored at the beginning.
@@ -50,21 +50,21 @@ def is_valid_equation(given_numbers: list[int], before_equals: str, after_equals
             if debug:
                 print("Invalid Equation: before_equals is not equivalent to after_equals")
             return False
-    except ValueError:
+    except SyntaxError:
         print("Cannot eval.")
         return False
 
     used_numbers = util_gameof24.extract_numbers(before_equals)
     if len(used_numbers) != 2:
-        if debug:
-            print("Invalid Equation: More than two numbers used.")
+        # if debug:
+            # print("Invalid Equation: More than two numbers used.")
         return False
 
     temp = given_numbers.copy()
     for num in used_numbers:
         if num not in temp:
-            if debug:
-                print(f"Invalid Equation: {num} incorrectly used (duplicate usage/unavailable)")
+            # if debug:
+            #     print(f"Invalid Equation: {num} incorrectly used (duplicate usage/unavailable)")
             return False
         temp.remove(num)
     return True
