@@ -144,7 +144,7 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3, count_tokens: bool
             promp = PROMPT_1_longer.replace("<NUMBERS>", str_quad).replace(
                 "<THOUGHTS>", str(step_one_responses))
 
-        (before_equals, after_equals), out_tokens = util_gameof24.ask_and_parse(
+        before_equals, after_equals, in_tokens, out_tokens = util_gameof24.ask_and_parse(
             promp, INSTRUCT, out_tokens=True)
 
         # step_one_responses.append(response)
@@ -232,7 +232,7 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3, count_tokens: bool
                     promp = PROMPT_2_longer.replace("<NUMBERS>", str_nums).replace(
                         "<THOUGHTS>", str(step_two_responses))
 
-                (child_before, child_after), out_tokens = util_gameof24.ask_and_parse(
+                child_before, child_after, in_tokens, out_tokens = util_gameof24.ask_and_parse(
                     promp, INSTRUCT, out_tokens=True)
 
                 # count tokens
