@@ -192,7 +192,7 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3, count_tokens: bool
         else:
             rest.append(rem_nums)
 
-    combined = sure_nums + likely_nums + rem_nums
+    combined = sure_nums + likely_nums + rest
     remaining_numbers = combined[:b]  # select b
     backtrack_list = combined[b:]  # come back to this list if necessary
 
