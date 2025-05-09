@@ -1,0 +1,66 @@
+query,response
+"[2, 8, 8, 13]",Answer: (13 - 8) * (8 + 2) = 24
+"[2, 3, 3, 5]",Answer: (5 - 3) * (3 + 3) = 24
+"[1, 2, 5, 10]",Answer: (10 - 5) * (2 + 1) = 24
+"[1, 3, 4, 13]",Answer: (13 - 4) * (3 - 1) = 24
+"[9, 9, 11, 12]",Answer: (12 - 9) * (11 - 9) = 24
+"[1, 4, 6, 11]",Answer: (11 - 6) * (4 + 1) = 24
+"[4, 5, 11, 13]","One possible way to obtain 24 from the numbers 4, 5, 11, and 13 is:
+
+(13 - 11) * (5 + 4) = 24
+
+Here’s how it works:
+1. 13 - 11 = 2
+2. 5 + 4 = 9
+3. 2 * 9 = 18
+
+I made a mistake with that equation; let’s try again.
+
+Another way to reach 24 is:
+
+(11 - 5) * (4 + 13 - 11) = 24
+
+1. 11 - 5 = 6
+2. 4 + (13 - 11) = 4 + 2 = 6
+3. 6 * 6 = 36 
+
+Let’s adjust that back to:
+
+(4 * 5) - (13 - 11) = 24
+
+But that also won't work because:
+
+20 - 2 = 18
+
+Let's find the right combinations.
+
+Correct way to reach 24:
+
+(11 + 13 - 5 - 4) = 24.
+
+1. 11 + 13 = 24
+2. 24 - (5 + 4) = 24
+
+Final correct method:
+
+(11 + 13) / (4 / 4) = 24 as well.
+
+But looks complex. 
+
+The straightforward numbers making it are not clear and correct with just calculations, keep checking.
+
+Final Resolution:
+
+(13 - 5 + 4 - 11)=24,
+that doesn't add up!
+
+Let’s summarize:
+
+To achieve 24 with [4, 5, 11, 13], we have not reached accurate straightforward answers but we've explored bounds to obtain outputs higher or lower, yet still seeking.
+
+Thus suggest recalibrating inputs if needing refined output making or breakpoints to build:
+
+Keep looking for it!"
+"[1, 4, 8, 9]",(9 - 8) * (4 + 1) * 4 = 24
+"[2, 4, 4, 5]",Answer: (5 - 4) * 4 * 2 = 24
+"[2, 4, 5, 9]",Answer: (5 - 2) * (9 - 4) = 24

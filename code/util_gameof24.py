@@ -23,7 +23,7 @@ def import_data():
     reads all permutations of 1-13 where arithmetic operations on four numbers can equal 24
     returns list of lists where each list is a quad
     """
-    df = pd.read_csv("gameof24/24game_problems.csv")
+    df = pd.read_csv("data/24game_problems.csv")
     df['numbers'] = df['numbers'].apply(literal_eval)
     numbers = df['numbers'].tolist()
     return numbers
@@ -45,7 +45,7 @@ def split_data():
     two = []
     one = []
 
-    df = pd.read_csv("gameof24/24game_problems.csv")
+    df = pd.read_csv("data/24game_problems.csv")
 
     for index, row in df.iterrows():
         if row["num_solutions"] < 10:
@@ -77,7 +77,7 @@ def papers_data():
     """
     imports dataset paper uses
     """
-    df = pd.read_csv("gameof24/24.csv")
+    df = pd.read_csv("data/24.csv")
     df["Puzzles"] = df["Puzzles"].apply(extract_numbers)
     # for i in range(len(df["puzzles"])):
     #     df["puzzles", i] = string_numbers_to_list(df["puzzles", i])

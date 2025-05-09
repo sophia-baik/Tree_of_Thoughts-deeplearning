@@ -1,0 +1,17 @@
+query,response
+"[3, 9, 9, 10]",Answer: (10 - 9) * (9 + 9) = 24
+"[2, 10, 10, 13]",Answer: (13 - 10) * (10 + 10) = 24
+"[2, 2, 9, 10]","To obtain 24 using the numbers 2, 2, 9, and 10, you can use the following calculation:
+
+Answer: (10 - 2) * (9 - 2) = 24"
+"[3, 8, 9, 13]",Answer: (13 - 9) * (8 + 3) = 24
+"[7, 7, 8, 11]",Answer: (11 - 7) * (8 - 7) = 24
+"[4, 5, 6, 11]","To obtain 24 from the numbers 4, 5, 6, and 11, you can use the following equation:
+
+(11 - 5) * (6 - 4) = 24
+
+So the answer is: (11 - 5) * (6 - 4) = 24"
+"[3, 4, 4, 11]",Answer: (11 - 4) * (4 - 3) = 24
+"[4, 4, 5, 13]",Answer: (5 * 4) + (13 - 4) = 24
+"[1, 7, 12, 13]",Answer: (13 - 12) * (7 + 1) = 24
+"[6, 6, 7, 10]",Answer: (10 - 6) * (6 + 6) = 24

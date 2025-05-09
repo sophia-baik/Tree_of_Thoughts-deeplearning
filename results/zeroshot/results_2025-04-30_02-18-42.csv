@@ -1,0 +1,30 @@
+query,response
+"[5, 8, 8, 8]",(8 - 5) * (8 + 8) = 24
+"[3, 3, 11, 12]",Answer: (12 - 11) * (3 + 3) = 24
+"[2, 2, 4, 12]","To obtain 24 from the numbers 2, 2, 4, and 12, you can use the following equation:
+
+(12 / 2) * (4 - 2) = 24
+
+Here's how it works:
+1. Divide 12 by 2 to get 6.
+2. Subtract 2 from 4 to get 2.
+3. Multiply 6 by 2 to get 12.
+
+So the operation yields:
+
+(12 / 2) * (4 - 2) = 6 * 2 = 12. 
+
+Upon reevaluating, here’s the correct approach:
+
+12 * 2 = 24, as simply, 12 times the first 2 equals 24. 
+
+So the correct calculation is:
+
+12 * 2 = 24."
+"[4, 4, 7, 12]",Answer: (12 - 4) * (7 - 4) = 24
+"[1, 2, 3, 10]",Answer: (10 - 3) * (2 + 1) = 24
+"[3, 3, 4, 9]",Answer: (9 - 3) * (4 - 3) = 24
+"[1, 8, 8, 10]",Answer: (10 - 8) * (8 + 8) = 24
+"[1, 11, 12, 12]",Answer: (12 - 11) * (12 + 1) = 24
+"[3, 9, 11, 12]",Answer: (12 - 11) * (9 + 3) = 24
+"[2, 4, 5, 8]",Answer: (8 - 5) * (4 + 2) = 24

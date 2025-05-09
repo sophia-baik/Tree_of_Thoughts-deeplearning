@@ -48,7 +48,7 @@ def get_responses(dataset, amount=10):
     out_df = pd.DataFrame(list(responses.items()),
                           columns=['query', 'response'])
     out_df.to_csv(
-        f"gameof24/data_zeroshot/results_{entry_number}.csv", index=False)
+        f"results/zeroshot/results_{entry_number}.csv", index=False)
 
     return entry_number
 
@@ -57,7 +57,7 @@ def eval_correctness(entry_number: str):
     """returns what percent of responses equal 24"""
     correct = 0
     total = 0
-    df = pd.read_csv(f"gameof24/data_zeroshot/results_{entry_number}.csv")
+    df = pd.read_csv(f"results/zeroshot/results_{entry_number}.csv")
     l = len(df['response'])
     not_correct_format = []
     for i in range(l):
@@ -134,4 +134,4 @@ if __name__ == "__main__":
         percentage = eval_correctness(datetime)
         print(percentage)
     # util_gameof24.update_percentage(
-    #     percentage, datetime, "gameof24/data_zeroshot/percent_correct.csv")
+    #     percentage, datetime, "results/zeroshot/percent_correct.csv")

@@ -1,0 +1,55 @@
+query,response
+"[3, 5, 7, 12]",(12 - 5) * (7 - 3) = 24
+"[7, 7, 10, 13]",Answer: (13 - 10) * (7 + 7) = 24
+"[3, 4, 12, 12]",Answer: (12 / 3) * (12 - 4) = 24
+"[4, 6, 9, 12]",Answer: (12 - 6) * (9 - 4) = 24
+"[1, 8, 8, 12]",Answer: (12 - 8) * (8 + 1) = 24
+"[2, 8, 9, 13]",Answer: (13 - 9) * (8 - 2) = 24
+"[4, 6, 7, 10]",Answer: (10 - 6) * (7 + 4) = 24
+"[2, 2, 10, 13]",Answer: (13 - 10) * (2 + 2) = 24
+"[6, 7, 10, 12]","To obtain 24 from the numbers 6, 7, 10, and 12, you can use the following operation:
+
+(12 - 10) * (7 + 6) = 24
+
+This simplifies as follows:
+
+1. 12 - 10 = 2
+2. 7 + 6 = 13
+3. 2 * 13 = 26, but it seems I made an error.
+
+Actually, a correct operation would be:
+
+(10 - 6) * 7 + 12 = 24
+
+Breaking that down:
+
+1. 10 - 6 = 4
+2. 4 * 7 = 28
+3. 28 - 12 = 24
+
+So another valid equation could be:
+
+(12 - 6) * 7 - 10 = 24, but this one isn't valid since it won't land directly on 24!
+
+I apologize for the oversight. Let's correct that to:
+
+**(12 - 10) * (7 + 6) + 6** 
+
+However, rechecking, clearly, simple manipulation isn't working in my output. 
+
+So the conclusive output could revolve around addition for clearer:
+
+Using another combination:
+
+4 + 12 + 8 = 24
+
+But for precisely those numbers 6, 7, 10, 12 gets tricky!
+
+An overall redistribution needs clearer calculation, but I realize while summing I tend to double count so separating to initial will yield way:
+
+*(10-6)*(12-7)=*
+
+Thus I conclude sometimes my arithmetic seems amiss, working better tracks from connecting basics sums!
+
+Please feel free to use my earlier operations if you devise unique outputs!"
+"[3, 3, 6, 10]",Answer: (10 - 6) * (3 + 3) = 24
