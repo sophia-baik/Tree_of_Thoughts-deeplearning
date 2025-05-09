@@ -22,9 +22,12 @@ All of our ToT models outperform 5-shot GPT at every difficulty level as shown i
 
 ## References
 [1] Diederik P. Kingma and Jimmy Ba. Adam: A method for stochastic optimization, 2017.
+
 [2] OpenAI. Openai api. https://platform.openai.com, 2024. Computer software.
+
 [3] Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed Chi, Quoc Le, and
 Denny Zhou. Chain-of-thought prompting elicits reasoning in large language models, 2023.
+
 [4] Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Thomas L. Griffiths, Yuan Cao, and Karthik
 Narasimhan. Tree of thoughts: Deliberate problem solving with large language models. 2023.
 
