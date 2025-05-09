@@ -24,7 +24,7 @@ df = util_gameof24.papers_data()
 
 # Load weights from pretrained network
 value_model = ValueNetwork()
-value_model.load_state_dict(torch.load('gameof24/value_network.pth', weights_only = True))
+value_model.load_state_dict(torch.load('gameof24/trained_value_net.pth', weights_only = True))
 value_model.eval()
 
 def evaluate_states(states):
