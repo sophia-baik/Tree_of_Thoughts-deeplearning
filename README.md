@@ -19,24 +19,9 @@ The files in our Github includes all necessary codes and results used for replic
 
 ## Re-implementation Details
 
-We created a **dataset** of 1,362 solvable four-number combinations from the range 1–13 using `code/create_dataset_go24.py`. Each combination was categorized into five difficulty levels based on the number of possible solutions.
+We created a **dataset** of 1,362 solvable four-number combinations from the range 1–13 using `code/create_dataset_go24.py` and tested with **five ToT models with different evaluators**.  
 
-Our re-implementation includes **five ToT models with different evaluators**:
-- 5-shot GPT baseline
-- LLM evaluator
-- LLM evaluator with backtracking
-- Learned evaluator
-- Learned evaluator with backtracking
-
-Due to **API, cost, and time constraints**, we made several modifications to the original paper:
-- Used **GPT-4o-mini** via OpenAI API [1] instead of GPT-4 (2023), resulting in an implementation ~150× cheaper.
-- Introduced a **learned value function**, a neural network trained to estimate the probability of reaching 24 from a given state.
-- Replaced full **BFS tree exploration** with a **backtracking mechanism** for efficiency.
-- Skipped the evaluation step after step 2, since it involves checking whether 24 can be formed from two remaining numbers—a task that is computationally trivial.
-
-These changes preserved the core logic of Tree of Thoughts while improving practicality for constrained settings.
-
-<img src="results/tot_architecture.png" width="600"/>
+Due to API, cost, and time constraints, we modified the original paper by using **GPT-4o-mini** via OpenAI API [1] instead of GPT-4 (2023), introduced a **learned value function** to estimate the probability of reaching 24, replaced the full BFS tree exploration with a more efficient **backtracking mechanism**, and substituted evaluation at the end with **direct operations**.
 
 ## Reproduction Steps
 
