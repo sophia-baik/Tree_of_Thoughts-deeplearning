@@ -10,7 +10,7 @@ We reproduce the results from Section 4.1 of Yao et al’s 2023 paper, which dem
 The files in our Github includes all necessary codes and results used for replicating the study,presentation, and results. 
 | File Name | Description |
 |-----------|-------------|
-| Code      | Main implementation files. `/archive` contains deprecated or unused code from the replication process |
+| Code      | Main implementation files. `/archive` contains unused code from the replication process |
 | Data      | Generated input data for Game of 24 and pretrained weights used in the reinforcement learning model |
 | Poster    | Presentation poster |
 | Report    | Two-page final report |
@@ -27,6 +27,7 @@ Create a .env file and add your api key in the format OPENAI_API_KEY="YOUR_API_K
 
 ## Results/Insights
 All of our ToT models outperform the baseline 5-shot GPT across all difficulty levels, as shown in the figure below. Incorporating backtracking achieves accuracy comparable to the original paper, following the performance hierarchy: LLM evaluator > Learned evaluator > 5-shot.
+
 <img src="results/accuracy_plot.png" width="600"/>
 
  Notably, our ToT model with the LLM evaluator is also approximately 150 times more cost-efficient than the original implementation.
