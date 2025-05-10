@@ -56,6 +56,7 @@ All of our ToT models outperform the baseline 5-shot GPT across all difficulty l
 <img src="results/accuracy_plot.png" width="600"/>
 
  Notably, our ToT model with the LLM evaluator is also approximately 150 times more cost-efficient than the original implementation.
+ 
 <img src="results/thetable.png" width="500"/>
 
 
