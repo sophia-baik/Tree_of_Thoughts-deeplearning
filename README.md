@@ -18,12 +18,37 @@ The files in our Github includes all necessary codes and results used for replic
 
 
 ## Re-implementation Details
-- describe your approach to re-implementation or experimentation; include key details abt models, datasets, tools, and evaluation metrics, mention any challenges or modifications made to the original approach
+
+We created a **dataset** of 1,362 solvable four-number combinations from the range 1–13 using `code/create_dataset_go24.py`. Each combination was categorized into five difficulty levels based on the number of possible solutions.
+
+Our re-implementation includes **five ToT models with different evaluators**:
+- 5-shot GPT baseline
+- LLM evaluator
+- LLM evaluator with backtracking
+- Learned evaluator
+- Learned evaluator with backtracking
+
+Due to **API, cost, and time constraints**, we made several modifications to the original paper:
+- Used **GPT-4o-mini** via OpenAI API instead of GPT-4 (2023), resulting in an implementation ~150× cheaper.
+- Introduced a **learned value function**, a neural network trained to estimate the probability of reaching 24 from a given state.
+- Replaced full **BFS tree exploration** with a **backtracking mechanism** for efficiency.
+- Skipped the evaluation step after step 2, since it involves checking whether 24 can be formed from two remaining numbers—a task that is computationally trivial.
+
+These changes preserved the core logic of Tree of Thoughts while improving practicality for constrained settings.
 
 <img src="results/tot_architecture.png" width="600"/>
 
 ## Reproduction Steps
-Create a .env file and add your api key in the format OPENAI_API_KEY="YOUR_API_KEY_HERE". Then, you can choose to run ...
+
+1. Create a .env file and add your api key in the format OPENAI_API_KEY="YOUR_API_KEY_HERE".
+2. Simply running following files will return an accuracy score for each evaluation model and the results will be printed on the console: 
+   - LLM evaluation: '/code/run_not_iid_tot_go24.py'
+   - LLM with backtracking: '/code/run_backtracking_tot_go24.py'
+   - Learned evaluation: '/code/run_value_net_tot_go24.py'
+   - Baseline 5-shots learning: '/code/run_zeroshot_go24.py'
+3. Adjust the dataset range in the evaluation model files to test specific difficulty level.
+
+
 
 ## Results/Insights
 All of our ToT models outperform the baseline 5-shot GPT across all difficulty levels, as shown in the figure below. Incorporating backtracking achieves accuracy comparable to the original paper, following the performance hierarchy: LLM evaluator > Learned evaluator > 5-shot.
