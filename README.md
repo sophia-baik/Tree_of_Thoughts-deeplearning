@@ -1,7 +1,7 @@
 # Tree of Thoughts
 
 ## Introduction
-LLMs struggle with structured, multi-step reasoning, limiting performance on complex problems that require planning or exploring multiple solution paths. To address this, we reproduce the Tree of Thoughts (ToT) [4] framework introduced by Yao et al. in 2023, which enhances the Chain of Thought (CoT) [3] approach by enabling language models to generate and explore diverse intermediate “thoughts” through a structured branching process, improving problem solving.
+LLMs struggle with structured, multi-step reasoning, limiting performance on complex problems that require planning or exploring multiple solution paths. To address this, we reproduce the Tree of Thoughts (ToT) [3] framework introduced by Yao et al. in 2023, which enhances the Chain of Thought (CoT) [2] approach by enabling language models to generate and explore diverse intermediate “thoughts” through a structured branching process, improving problem solving.
 
 ## Chosen Result
 We reproduce the results from Section 4.1 of Yao et al’s 2023 paper, which demonstrates the improved performance of ToT on the Game of 24; a game that involves combining four numbers with basic arithmetic operations to create 24, a task that requires strategic planning and logical reasoning. The key result we aim to replicate is paper's ToT accuracy of 74% with b = 5 where b is the maximum breadth of the tree at any given level.
@@ -29,7 +29,7 @@ Our re-implementation includes **five ToT models with different evaluators**:
 - Learned evaluator with backtracking
 
 Due to **API, cost, and time constraints**, we made several modifications to the original paper:
-- Used **GPT-4o-mini** via OpenAI API instead of GPT-4 (2023), resulting in an implementation ~150× cheaper.
+- Used **GPT-4o-mini** via OpenAI API [1] instead of GPT-4 (2023), resulting in an implementation ~150× cheaper.
 - Introduced a **learned value function**, a neural network trained to estimate the probability of reaching 24 from a given state.
 - Replaced full **BFS tree exploration** with a **backtracking mechanism** for efficiency.
 - Skipped the evaluation step after step 2, since it involves checking whether 24 can be formed from two remaining numbers—a task that is computationally trivial.
@@ -66,14 +66,12 @@ systematic exploration of reasoning paths and backtracking are key to performanc
 broadly, complex reasoning tasks.
 
 ## References
-[1] Diederik P. Kingma and Jimmy Ba. Adam: A method for stochastic optimization, 2017.
+[1] OpenAI. Openai api. https://platform.openai.com, 2024. Computer software.
 
-[2] OpenAI. Openai api. https://platform.openai.com, 2024. Computer software.
-
-[3] Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed Chi, Quoc Le, and
+[2] Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed Chi, Quoc Le, and
 Denny Zhou. Chain-of-thought prompting elicits reasoning in large language models, 2023.
 
-[4] Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Thomas L. Griffiths, Yuan Cao, and Karthik
+[3] Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Thomas L. Griffiths, Yuan Cao, and Karthik
 Narasimhan. Tree of thoughts: Deliberate problem solving with large language models. 2023.
 
 ## Acknowledgements
