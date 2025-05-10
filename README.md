@@ -4,22 +4,32 @@
 LLMs struggle with structured, multi-step reasoning, limiting performance on complex problems that require planning or exploring multiple solution paths. To address this, we reproduce the Tree of Thoughts (ToT) [4] framework introduced by Yao et al. in 2023, which enhances the Chain of Thought (CoT) [3] approach by enabling language models to generate and explore diverse intermediate “thoughts” through a structured branching process, improving problem solving.
 
 ## Chosen Result
-We reproduce the results from Section 4.1 of Yao et al’s 2023 paper, which demonstrates the improved performance of ToT on the Game of 24; a game that involves combining four numbers with basic arithmetic operations to create 24, a task that requires strategic planning and logical reasoning. The key result we aim to replicate is paper's ToT accuracy of 74% with b=5 where b is the maximum breadth of the tree at any given level.
+We reproduce the results from Section 4.1 of Yao et al’s 2023 paper, which demonstrates the improved performance of ToT on the Game of 24; a game that involves combining four numbers with basic arithmetic operations to create 24, a task that requires strategic planning and logical reasoning. The key result we aim to replicate is paper's ToT accuracy of 74% with b = 5 where b is the maximum breadth of the tree at any given level.
 
 ## GitHub Contents
-Our code is in the code folder, the data we used is in the data folder, our results are in the results folder...
+The files in our Github includes all necessary codes and results used for replicating the study,presentation, and results. 
+| File Name | Description |
+|-----------|-------------|
+| Code      | Main implementation files. `/archive` contains deprecated or unused code from the replication process |
+| Data      | Generated input data for Game of 24 and pretrained weights used in the reinforcement learning model |
+| Poster    | Presentation poster |
+| Report    | Two-page final report |
+| Results   | Graphs and tables showing experiment outcomes|
+
 
 ## Re-implementation Details
 - describe your approach to re-implementation or experimentation; include key details abt models, datasets, tools, and evaluation metrics, mention any challenges or modifications made to the original approach
+
 <img src="results/tot_architecture.png" width="600"/>
 
 ## Reproduction Steps
 Create a .env file and add your api key in the format OPENAI_API_KEY="YOUR_API_KEY_HERE". Then, you can choose to run ...
 
 ## Results/Insights
-All of our ToT models outperform 5-shot GPT at every difficulty level as shown in Fig. 3. Backtracking yields accuracy comparable to the original paper where LLM evaluator > Learned evaluator > 5-shot. ToT with the LLM evaluator model is also 150x cheaper than the original paper.
-
+All of our ToT models outperform the baseline 5-shot GPT across all difficulty levels, as shown in the figure below. Incorporating backtracking achieves accuracy comparable to the original paper, following the performance hierarchy: LLM evaluator > Learned evaluator > 5-shot.
 <img src="results/accuracy_plot.png" width="600"/>
+
+ Notably, our ToT model with the LLM evaluator is also approximately 150 times more cost-efficient than the original implementation.
 <img src="results/thetable.png" width="500"/>
 
 
