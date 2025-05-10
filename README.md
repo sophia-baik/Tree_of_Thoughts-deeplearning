@@ -11,15 +11,16 @@ Our code is in the code folder, the data we used is in the data folder, our resu
 
 ## Re-implementation Details
 - describe your approach to re-implementation or experimentation; include key details abt models, datasets, tools, and evaluation metrics, mention any challenges or modifications made to the original approach
-![tot arch](results/tot_architecture.png)
+<img src="results/tot_architecture.png" width="400"/>
 
 ## Reproduction Steps
 Create a .env file and add your api key in the format OPENAI_API_KEY="YOUR_API_KEY_HERE". Then, you can choose to run ...
 
 ## Results/Insights
 All of our ToT models outperform 5-shot GPT at every difficulty level as shown in Fig. 3. Backtracking yields accuracy comparable to the original paper where LLM evaluator > Learned evaluator > 5-shot. ToT with the LLM evaluator model is also 150x cheaper than the original paper.
-![accuracy plot](results/accuracy_plot.png)
-![cost analysis](results/thetable.png)
+<img src="results/accuracy_plot.png" width="400"/>
+<img src="results/thetable.png" width="350"/>
+
 
 ## Conclusion
 Our reproduction confirmed that ToT outperforms traditional LLMs on structured reasoning tasks like G24. The
