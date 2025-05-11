@@ -10,12 +10,12 @@ We reproduce the key result from Section 4.1 of Yao et al. (2023) [2], which dem
 
 ## GitHub Contents
 
-This GitHub repository includes the data, results, poster, and report as well as all code necessary to reproduce them.
+This repository includes the data, results, poster, and report as well as all code necessary to reproduce them.
 
 | Directory Name | Description |
 |-----------|-------------|
 | Code      | Main implementation files. `/archive` contains unused code from the replication process |
-| Data      | Generated input data for Game of 24 and pretrained weights used in the reinforcement learning model |
+| Data      | Generated input data for the Game of 24 and pretrained weights used in the reinforcement learning model |
 | Poster    | Presentation poster |
 | Report    | Two-page final report |
 | Results   | Graphs and tables showing experiment outcomes|
@@ -38,20 +38,17 @@ Due to API, cost, and time constraints, we modified the original paper by using 
 
 ## Results/Insights
 
-All of our ToT models outperform the baseline 5-shot GPT across all difficulty levels, as shown in the figure below. Incorporating backtracking achieves accuracy comparable to the original paper, following the performance hierarchy: LLM evaluator > Learned evaluator > 5-shot.
+All of our ToT models outperform the 5-shot GPT baseline across all difficulty levels, as shown in the figure below. Implementing backtracking achieved accuracy comparable to the original paper, following the performance hierarchy: LLM evaluator > Learned evaluator > 5-shot.
 
 <img src="results/accuracy_plot.png" width="600"/>
 
- Notably, our ToT model with the LLM evaluator is also approximately 150 times more cost-efficient than the original implementation.
+ Notably, our ToT model with the LLM evaluator is 100 times more cost-efficient than the original implementation.
  
 <img src="results/thetable.png" width="500"/>
 
-
 ## Conclusion
 
-Our reproduction confirmed that ToT outperforms traditional LLMs on structured reasoning tasks like G24. The
-systematic exploration of reasoning paths and backtracking are key to performance gains for G24, and more
-broadly, complex reasoning tasks.
+Our reproduction confirmed that ToT outperforms traditional LLMs on structured reasoning tasks like the Game of 24. Systematic exploration of reasoning paths and backtracking are key to performance gains for the Game of 24 and, more broadly, complex reasoning tasks.
 
 ## References
 
