@@ -1,63 +1,62 @@
 # Tree of Thoughts
 
 ## Introduction
-LLMs struggle with structured, multi-step reasoning, limiting performance on complex problems that require planning or exploring multiple solution paths. To address this, we reproduce the Tree of Thoughts (ToT) [3] framework introduced by Yao et al. in 2023, which enhances the Chain of Thought (CoT) [2] approach by enabling language models to generate and explore diverse intermediate “thoughts” through a structured branching process, improving problem solving.
+
+This repository reproduces the Tree of Thoughts (ToT) [2] framework from Yao et al. (2023), which improves large language models’ (LLMs) performance on complex reasoning tasks through exploration of intermediate “thoughts” in a structured branching process.
 
 ## Chosen Result
-We reproduce the results from Section 4.1 of Yao et al’s 2023 paper, which demonstrates the improved performance of ToT on the Game of 24; a game that involves combining four numbers with basic arithmetic operations to create 24, a task that requires strategic planning and logical reasoning. The key result we aim to replicate is paper's ToT accuracy of 74% with b = 5 where b is the maximum breadth of the tree at any given level.
+
+We reproduce the key result from Section 4.1 of Yao et al. (2023) [2], which demonstrates ToT's 74% accuracy on the Game of 24 as compared to 7.3% for few-shot prompting.
 
 ## GitHub Contents
-The files in our Github includes all necessary codes and results used for replicating the study,presentation, and results. 
-| File Name | Description |
+
+This repository includes the data, results, poster, and report as well as all code necessary to reproduce them.
+
+| Directory Name | Description |
 |-----------|-------------|
 | Code      | Main implementation files. `/archive` contains unused code from the replication process |
-| Data      | Generated input data for Game of 24 and pretrained weights used in the reinforcement learning model |
+| Data      | Generated input data for the Game of 24 and pretrained weights used in the reinforcement learning model |
 | Poster    | Presentation poster |
 | Report    | Two-page final report |
 | Results   | Graphs and tables showing experiment outcomes|
 
-
 ## Re-implementation Details
 
-We created a **dataset** of 1,362 solvable four-number combinations from the range 1–13 using `code/create_dataset_go24.py` and tested with **five ToT models with different evaluators**.  
+We created a **dataset** of 1,362 solvable Game of 24 problems using `code/create_dataset_go24.py` and evaluated our four models: 5-shot baseline, ToT with learned evaluator, ToT with LLM evaluator, and ToT with LLM evaluator + backtracking.
 
-Due to API, cost, and time constraints, we modified the original paper by using **GPT-4o-mini** via OpenAI API [1] instead of GPT-4 (2023), introduced a **learned value function** to estimate the probability of reaching 24, replaced the full BFS tree exploration with a more efficient **backtracking mechanism**, and substituted evaluation at the end with **direct operations**.
+Due to API, cost, and time constraints, we modified the original paper by using **GPT-4o-mini** via OpenAI API [1] instead of GPT-4 (2023), experimented with a **learned value function**, replaced the full BFS tree exploration with a more efficient **backtracking mechanism**, and substituted evaluation at the end with **direct operations**.
 
 ## Reproduction Steps
 
-1. Create a .env file and add your api key in the format OPENAI_API_KEY="YOUR_API_KEY_HERE".
-2. Simply running following files will return an accuracy score for each evaluation model and the results will be printed on the console: 
-   - LLM evaluation: '/code/run_not_iid_tot_go24.py'
-   - LLM with backtracking: '/code/run_backtracking_tot_go24.py'
-   - Learned evaluation: '/code/run_value_net_tot_go24.py'
-   - Baseline 5-shots learning: '/code/run_zeroshot_go24.py'
-3. Adjust the dataset range in the evaluation model files to test specific difficulty level.
-
-
+1. Add your OpenAI API key to a `.env` file as `OPENAI_API_KEY="YOUR_API_KEY_HERE"`.
+2. Run any of the following scripts to see the performance of the models on a batch of 10 problems:
+   - **LLM evaluator:** `/code/run_not_iid_tot_go24.py`
+   - **LLM evaluator + backtracking:** `/code/run_backtracking_tot_go24.py`
+   - **Learned evaluator:** `/code/run_value_net_tot_go24.py`
+   - **5-shot baseline:** `/code/run_zeroshot_go24.py`
+3. Optionally adjust problem difficulty in each script.
 
 ## Results/Insights
-All of our ToT models outperform the baseline 5-shot GPT across all difficulty levels, as shown in the figure below. Incorporating backtracking achieves accuracy comparable to the original paper, following the performance hierarchy: LLM evaluator > Learned evaluator > 5-shot.
+
+All of our ToT models outperform the 5-shot GPT baseline across all difficulty levels, as shown in the figure below. Implementing backtracking achieved accuracy comparable to the original paper, following the performance hierarchy: LLM evaluator > Learned evaluator > 5-shot.
 
 <img src="results/accuracy_plot.png" width="600"/>
 
- Notably, our ToT model with the LLM evaluator is also approximately 150 times more cost-efficient than the original implementation.
+ Notably, our ToT model with the LLM evaluator is 100 times more cost-efficient than the original implementation.
  
 <img src="results/thetable.png" width="500"/>
 
-
 ## Conclusion
-Our reproduction confirmed that ToT outperforms traditional LLMs on structured reasoning tasks like G24. The
-systematic exploration of reasoning paths and backtracking are key to performance gains for G24, and more
-broadly, complex reasoning tasks.
+
+Our reproduction confirmed that ToT outperforms traditional LLMs on structured reasoning tasks like the Game of 24. Systematic exploration of reasoning paths and backtracking are key to performance gains for the Game of 24 and, more broadly, complex reasoning tasks.
 
 ## References
+
 [1] OpenAI. Openai api. https://platform.openai.com, 2024. Computer software.
 
-[2] Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed Chi, Quoc Le, and
-Denny Zhou. Chain-of-thought prompting elicits reasoning in large language models, 2023.
-
-[3] Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Thomas L. Griffiths, Yuan Cao, and Karthik
+[2] Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Thomas L. Griffiths, Yuan Cao, and Karthik
 Narasimhan. Tree of thoughts: Deliberate problem solving with large language models. 2023.
 
 ## Acknowledgements
+
 This was the final project for Cornell University's CS 4/5782 Introduction to Deep Learning.
