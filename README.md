@@ -2,11 +2,11 @@
 
 ## Introduction
 
-This repository reproduces the Tree of Thoughts (ToT) [3] framework from Yao et al. (2023), which improves large language models’ (LLMs) performance on complex reasoning tasks through exploration of intermediate “thoughts” in a structured branching process.
+This repository reproduces the Tree of Thoughts (ToT) [2] framework from Yao et al. (2023), which improves large language models’ (LLMs) performance on complex reasoning tasks through exploration of intermediate “thoughts” in a structured branching process.
 
 ## Chosen Result
 
-We reproduce the key result from Section 4.1 of Yao et al. (2023) [3], which demonstrates ToT's 74% accuracy on the Game of 24 as compared to 7.3% for few-shot prompting.
+We reproduce the key result from Section 4.1 of Yao et al. (2023) [2], which demonstrates ToT's 74% accuracy on the Game of 24 as compared to 7.3% for few-shot prompting.
 
 ## GitHub Contents
 
@@ -29,7 +29,7 @@ Due to API, cost, and time constraints, we modified the original paper by using 
 ## Reproduction Steps
 
 1. Add your OpenAI API key to a `.env` file as `OPENAI_API_KEY="YOUR_API_KEY_HERE"`.
-2. Run any of the following scripts in `code/` to see the performance of the models on a batch of 10 problems:
+2. Run any of the following scripts to see the performance of the models on a batch of 10 problems:
    - **LLM evaluator:** `/code/run_not_iid_tot_go24.py`
    - **LLM evaluator + backtracking:** `/code/run_backtracking_tot_go24.py`
    - **Learned evaluator:** `/code/run_value_net_tot_go24.py`
@@ -57,10 +57,7 @@ broadly, complex reasoning tasks.
 
 [1] OpenAI. Openai api. https://platform.openai.com, 2024. Computer software.
 
-[2] Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed Chi, Quoc Le, and
-Denny Zhou. Chain-of-thought prompting elicits reasoning in large language models, 2023.
-
-[3] Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Thomas L. Griffiths, Yuan Cao, and Karthik
+[2] Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Thomas L. Griffiths, Yuan Cao, and Karthik
 Narasimhan. Tree of thoughts: Deliberate problem solving with large language models. 2023.
 
 ## Acknowledgements
