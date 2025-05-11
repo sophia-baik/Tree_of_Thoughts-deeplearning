@@ -130,8 +130,11 @@ if __name__ == "__main__":
     one, two, three, four, five = util_gameof24.split_data()
 
     for i in range(5):
+        # choose which dataset to run by changing parameter one,two,three, etc.
         datetime = get_responses(two)
         percentage = eval_correctness(datetime)
         print(percentage)
+
+    # uncomment code below if want to save results in csv file
     # util_gameof24.update_percentage(
     #     percentage, datetime, "results/zeroshot/percent_correct.csv")

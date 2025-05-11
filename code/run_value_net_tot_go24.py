@@ -4,7 +4,7 @@ import util_gameof24
 import torch
 import time
 import random
-from value_function_gameof24 import ValueNetwork
+from train_value_net_go24 import ValueNetwork
 from util_gameof24 import extract_features, pad
 
 # Instructions and Prompts
@@ -20,12 +20,14 @@ debug = True
 
 # Load game of 24 data
 # Note that the hardest problems are stored at the beginning.
-df = util_gameof24.papers_data() 
+df = util_gameof24.papers_data()
 
 # Load weights from pretrained network
 value_model = ValueNetwork()
-value_model.load_state_dict(torch.load('gameof24/trained_value_net.pth', weights_only = True))
+value_model.load_state_dict(torch.load(
+    'gameof24/trained_value_net.pth', weights_only=True))
 value_model.eval()
+
 
 def evaluate_states(states):
     """
@@ -38,6 +40,7 @@ def evaluate_states(states):
     with torch.no_grad():
         return value_model(x).squeeze(1).tolist()
 
+
 def is_valid_equation(given_numbers: list[int], before_equals: str, after_equals: str) -> bool:
     """
     Checks whether the given expression is valid using the following criteria:
@@ -48,7 +51,8 @@ def is_valid_equation(given_numbers: list[int], before_equals: str, after_equals
     try:
         if eval(before_equals) != eval(after_equals):
             if debug:
-                print("Invalid Equation: before_equals is not equivalent to after_equals")
+                print(
+                    "Invalid Equation: before_equals is not equivalent to after_equals")
             return False
     except SyntaxError:
         print("Cannot eval.")
@@ -57,7 +61,7 @@ def is_valid_equation(given_numbers: list[int], before_equals: str, after_equals
     used_numbers = util_gameof24.extract_numbers(before_equals)
     if len(used_numbers) != 2:
         # if debug:
-            # print("Invalid Equation: More than two numbers used.")
+        # print("Invalid Equation: More than two numbers used.")
         return False
 
     temp = given_numbers.copy()
@@ -84,6 +88,7 @@ def find_remaining_nums(original: list, before: str, after: str) -> str:
         output.remove(int(s))
     output.append(eval(after))
     return output
+
 
 def complete_one_problem(quad: list[int], b: int, k: int = 3):
     """
@@ -117,8 +122,8 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
     # Step 1: Query Chat to combine two of the four initial numbers b * k times
     for i in range(b * k):
         try:
-            before, after, input_tokens, output_tokens = util_gameof24.ask_and_parse(PROMPTS["step1"] + str(quad) + 
-                                                    PROMPTS["prevent_repetition"] + str(step1_responses), INSTRUCT, True, 1.2)
+            before, after, input_tokens, output_tokens = util_gameof24.ask_and_parse(PROMPTS["step1"] + str(quad) +
+                                                                                     PROMPTS["prevent_repetition"] + str(step1_responses), INSTRUCT, True, 1.2)
         except SyntaxError:
             return False, total_input_tokens, total_output_tokens
         total_input_tokens += input_tokens
@@ -150,7 +155,7 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
         for i in range(k):
             try:
                 before, after, input_tokens, output_tokens = util_gameof24.ask_and_parse(PROMPTS["step2"] + str(state) +
-                                                        PROMPTS["prevent_repetition"] + str(step2_responses), INSTRUCT, True, 1.2)
+                                                                                         PROMPTS["prevent_repetition"] + str(step2_responses), INSTRUCT, True, 1.2)
             except SyntaxError:
                 return False, total_input_tokens, total_output_tokens
             total_input_tokens += input_tokens
@@ -184,12 +189,13 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
                     INSTRUCT, True, 1.0
                 )
             except SyntaxError:
-               return False, total_input_tokens, total_output_tokens
+                return False, total_input_tokens, total_output_tokens
             total_input_tokens += input_tokens
             total_output_tokens += output_tokens
             if before and after and is_valid_equation(state, before, after):
                 if abs(eval(after) - 24) < 1e-6:
-                    print("Chat solved it with:", trace + [f"{before} = {after}"])
+                    print("Chat solved it with:",
+                          trace + [f"{before} = {after}"])
                     return 1, total_input_tokens, total_output_tokens
 
         # 2) **Fallback brute-force** on the last two numbers
@@ -200,19 +206,23 @@ def complete_one_problem(quad: list[int], b: int, k: int = 3):
             f"{b} - {a}": b - a,
             f"{a} * {b}": a * b
         }
-        if b != 0: candidates[f"{a} / {b}"] = a / b
-        if a != 0: candidates[f"{b} / {a}"] = b / a
+        if b != 0:
+            candidates[f"{a} / {b}"] = a / b
+        if a != 0:
+            candidates[f"{b} / {a}"] = b / a
 
         # Pick any that exactly hits 24
         for expr, val in candidates.items():
             if abs(val - 24) < 1e-6:
-                print("Fallback solved it with:", trace + [f"{expr} = {int(val)}"])
+                print("Fallback solved it with:",
+                      trace + [f"{expr} = {int(val)}"])
                 return 2, total_input_tokens, total_output_tokens
 
     print("Chat failed.")
     return 0, total_input_tokens, total_output_tokens
 
-def run_experiment(df, amount, b = 5):
+
+def run_experiment(df, amount, b=5):
     start_time = time.time()
     total = 0
     correct = 0
@@ -231,17 +241,17 @@ def run_experiment(df, amount, b = 5):
         if res == 2:
             fallback += 1
     time_elapsed = time.time() - start_time
-    print(f"Used " + str(total_input_tokens) + " input tokens and " + str(total_output_tokens) + " output tokens.")
-    print(f"This cost " + str(util_gameof24.total_cost(total_input_tokens, total_output_tokens)))
+    print(f"Used " + str(total_input_tokens) + " input tokens and " +
+          str(total_output_tokens) + " output tokens.")
+    print(f"This cost " +
+          str(util_gameof24.total_cost(total_input_tokens, total_output_tokens)))
     print(f"\nFinished {total} problems in {time_elapsed:.2f} seconds.")
     print("Fellback on " + str(fallback) + " problems.")
     return correct/total
 
+
 if __name__ == '__main__':
     one, two, three, four, five = util_gameof24.split_data()
 
-    # for i in range(5):
-
-    print(run_experiment(two, 10))  # returns 0.68 on first run
-    #complete_one_problem([1,2,3,4], 5) 
-    # print(is_valid_equation([2, 3, 5, 12], "12 + 5", "17"))
+    # choose which dataset to run by changing parameter one,two,three, etc.
+    print(run_experiment(two, 10))

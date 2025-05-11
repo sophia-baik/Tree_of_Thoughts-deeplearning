@@ -330,17 +330,5 @@ def cost_of_one_problem(index):
 
 if __name__ == '__main__':
     one, two, three, four, five = util_gameof24.split_data()
+    # choose which dataset to run by changing parameter one,two,three, etc.
     print(run_difficulties_experiment(one))
-
-    # for i in range(10):
-    #     x = cost_of_one_problem(i)
-    #     print(x[0], x[1], x[2])
-    # outputs = []
-    # x = run_experiment(1, 5)
-    # outputs.append(x)
-    # x = run_papers_experiment()
-    # print(x)  # returns 0.68 on first run
-    # print("\nfinal outputs\n")
-    # print(outputs)
-    # complete_one_problem([4, 6, 12, 13], 5)
-    # print(is_valid_equation([2, 3, 5, 12], "12 + 5", "17"))

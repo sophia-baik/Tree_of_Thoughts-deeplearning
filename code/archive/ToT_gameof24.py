@@ -2,7 +2,6 @@ import util_gameof24
 from typing import List
 
 
-
 # instructions and prompts
 INSTRUCT = "You are a game of 24 grandmaster. We are going to take this problem step by step. At each step, you are going to pick only 2 numbers to operate on. Put only the mathematical expression you choose on the last line and nothing else. Don't put any of the math in latex or markdown formats."
 PROMPT_1 = "Numbers: "
@@ -74,20 +73,23 @@ def find_remaining_nums(original: list, before: str, after: str) -> str:
     output.append(eval(after))
     return output
 
+
 def evaluate_remaining_numbers(remaining_numbers: List[int]) -> str:
     evaluation_prompt = (
         f"Given the numbers {remaining_numbers}, "
         "how likely is it to reach 24 using +, -, *, / only?\n"
         "Answer with one word: Sure, Maybe, or Impossible."
     )
-    response = util_gameof24.ask_chat(evaluation_prompt, util_gameof24.MODEL, INSTRUCT)
+    response = util_gameof24.ask_chat(
+        evaluation_prompt, util_gameof24.MODEL, INSTRUCT)
     if "sure" in response.lower():
         return "Sure"
     elif "maybe" in response.lower():
         return "Maybe"
     else:
         return "Impossible"
-    
+
+
 def complete_one_problem(quad: List[int], b: int):
     """
     uses ToT to solve problem with [quad] numbers
@@ -125,12 +127,13 @@ def complete_one_problem(quad: List[int], b: int):
                     # correct += 1
                     # valid responses contains tuples
                     # each tuple has [0] the 2 numbers chat combined, and [1] the result
-                    remaining = find_remaining_nums(quad, before_equals, after_equals)
+                    remaining = find_remaining_nums(
+                        quad, before_equals, after_equals)
 
                     evaluation = evaluate_remaining_numbers(remaining)
                     if evaluation == "Impossible":
                         print("Pruned a Thought")
-                        continue 
+                        continue
                     valid_responses.append((before_equals, after_equals))
             except:
                 print("step 1: i think format was off: yes equals\n")
@@ -143,12 +146,13 @@ def complete_one_problem(quad: List[int], b: int):
                     # correct += 1
                     # valid responses contains tuples
                     # each tuple has [0] the 2 numbers chat combined, and [1] the result
-                    remaining = find_remaining_nums(quad, before_equals, after_equals)
+                    remaining = find_remaining_nums(
+                        quad, before_equals, after_equals)
 
                     evaluation = evaluate_remaining_numbers(remaining)
                     if evaluation == "Impossible":
                         print("Pruned a Thought")
-                        continue 
+                        continue
                     valid_responses.append((before_equals, after_equals))
             except:
                 print("step 1: i think format was off: no equals\n")
@@ -166,11 +170,11 @@ def complete_one_problem(quad: List[int], b: int):
         #     evaluation = evaluate_remaining_numbers(remaining)
         #     if evaluation == "Impossible":
         #        print("Pruned a Thought")
-        #        continue 
+        #        continue
         #     valid_responses.append((before_equals, after_equals))
 
     remaining_numbers_with_eval = [(find_remaining_nums(quad, before, after), evaluate_remaining_numbers(find_remaining_nums(quad, before, after)))
-                                    for before, after in valid_responses]
+                                   for before, after in valid_responses]
 
     # Sort by evaluation: Sure = 0, Maybe = 1
     remaining_numbers_with_eval.sort(key=lambda x: 0 if x[1] == "Sure" else 1)
@@ -190,8 +194,7 @@ def complete_one_problem(quad: List[int], b: int):
 
     print("\n\ndone step 1\n\n")
 
-    # step 2 
-
+    # step 2
 
     # for each b responses, ask chat using that response with 3*b responses and rank them. choose the best b
     # for each answer chat gave from step 1, sample 3 times
@@ -320,6 +323,5 @@ def run_experiment(amount, b):
 
 
 if __name__ == '__main__':
-    print(run_experiment(25, 5))  # returns 0.68 on first run
-    # complete_one_problem([4, 6, 12, 13], 5)
-    # print(is_valid_equation([2, 3, 5, 12], "12 + 5", "17"))
+    # change parameters depending on which dataset you want to run on
+    print(run_experiment(25, 5))
